@@ -121,11 +121,13 @@ class Parameter_File():
     path    : where the initial data should be produced
     params  : dictionary with the basic parameters of the binary
     """
-    def __init__(self, path='.', params):
+    def __init__(self, path='.', params={'bh_mass':'8', 'ns_mass':'1.6', 'bh_chi_z':'0.0', 'binary_separation':'40'}):
         self.path = path
-        self.pardic = parameter_dictionary(params)
+        self.user_params = params
+        self.pardic = self.parameter_dictionary()
 
-    def parameter_dictionary(params):
+    def parameter_dictionary(self):
+        params = self.user_params
         PARDIC['BHNS_separation'] = params['binary_separation']
         # black hole
         PARDIC['BH_chi_x'] = 0.
@@ -134,13 +136,13 @@ class Parameter_File():
         PARDIC['BH_irreducible_mass'] = params['bh_mass']
         # neutron star
         PARDIC['NS_baryonic_mass'] = params['ns_mass']
-        if PARDIC['eos'] == 'SLy':
+        if params['eos'] == 'SLy':
             PARDIC['NS_EoS_description'] = 'SLy'
             PARDIC['NS_EoS_type'] = 'piecewise_polytropic'
             PARDIC['NS_EoS_K0'] = '[8.95133496e-02]'
             PARDIC['NS_EoS_Gamma'] = '[1.35692395e+00,3.00500000e+00,2.98800000e+00,2.85100000e+00]'
             PARDIC['NS_EoS_rho0_th'] = '[0.00000000e+00,2.36719491e-04,8.11322219e-04,1.61880065e-03]'
-        elif PARDIC['eos'] == 'MS1b':
+        elif params['eos'] == 'MS1b':
             PARDIC['NS_EoS_description'] = 'MS1b'
             PARDIC['NS_EoS_type'] = 'piecewise_polytropic'
             PARDIC['NS_EoS_K0'] = '[8.94989354e-02]'

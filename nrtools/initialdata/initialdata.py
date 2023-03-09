@@ -12,26 +12,18 @@ class Initial_Data():
     ------------------
     path    : where the initial data should be produced
     params  : dictionary with the basic parameters of the binary
+    id_exe  : path/to/initialdata/executable
     """
-    def __init__(self, path='.', params, id_exe='$HOME/BHNS_Elliptica/Elliptica/Exe/elliptica'):
+    def __init__(self, path='.', params={'bh_mass':'8', 'ns_mass':'1.6', 'bh_chi_z':'0.0', 'binary_separation':'40', 'eos':'SLy'}, id_exe='$HOME/BHNS_Elliptica/Elliptica/Exe/elliptica'):
         self.path = path
 
         if params==None:
             print("Need specific parameters of binary to simulate")
         
+        self.user_params = params
         self.id_exe = id_exe
-        self.make_parfile(params)
-
-        # Create directory
-        simpath = os.path.join(self.path,simname)
-        try:
-            os.mkdir(simpath)
-        except FileExistsError:
-            print('Directory exists already: ',simname)
-
-        self.simpath = simpath
+        self.make_parfile(self.user_params)        
         self.write_bashfile()
-        self.run_job()
 
     def make_parfile(self, params):
         parfile = Parameter_File(self.path, params)
@@ -43,9 +35,16 @@ class Initial_Data():
         sep = pardic['BHNS_separation']
 
         self.simname = pardic['NS_EoS_description'] + '_BH_m' + str(round(mm,1)) + '_s' + str(cc) + '--NS_m' + str(mbNS) + '_s0--d' + str(sep)
+        self.simpath = os.path.join(self.path,self.simname)
+
+        # Create directory
+        try:
+            os.mkdir(self.simpath)
+        except FileExistsError:
+            print('Directory exists already: ',self.simpath)
 
         # Write par file
-        with open(self.path+self.simname+'/'+self.simname+'.par', 'w') as f:
+        with open(os.path.join(self.simpath,self.simname+'.par'), 'w') as f:
             for key, value in pardic.items():
                 f.write('%s =   %s\n' % (key, value))
 
@@ -54,7 +53,7 @@ class Initial_Data():
         self.bashname = bashname
         bss.write('#!/bin/bash \n')
         bss.write('#SBATCH --partition s_standard \n')
-        bss.write('#SBATCH -J '+simname+'\n')
+        bss.write('#SBATCH -J '+self.simname+'\n')
         bss.write('#SBATCH -o '+os.path.join(self.simpath,'out.log')+' \n')
         bss.write('#SBATCH -N 1 \n')
         bss.write('#SBATCH -n 1 \n')
