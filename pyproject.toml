@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0","numpy>=1.23.1","matplotlib>=3.5.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nrtools"
+version = "0.0.0"
+authors = [
+  { name="Alejandra Gonzalez", email="alejandra.gonzalez@uni-jena.de" },
+]
+description = "Numerical Relativity Tools"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://git.tpi.uni-jena.de/agonzalez/nrtools"
+"Bug Tracker" = "https://git.tpi.uni-jena.de/agonzalez/nrtools/-/issues"
