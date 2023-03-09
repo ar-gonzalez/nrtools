@@ -1,0 +1,14 @@
+from nrtools.initialdata import *
+import os
+
+# Test with existing ID
+
+outdir = '/beegfs/mo63poy/BHNS_Elliptica/SLy_BH_m2.4_s0--NS_m1.6_s0--d25'
+
+bhns_id = initialdata.Initial_Data(path=outdir,params=None,id_exe=None)
+
+metadata = bhns_id.md
+
+metadic = metadata.id_dic
+
+print(metadic['simname'])
