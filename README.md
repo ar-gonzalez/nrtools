@@ -1,6 +1,6 @@
 # Numerical Relativity Tools
 
-~*Under Construction*~
+*[AG, 09/03/2023]*
 
 Python package to handle and produce initial data and evolutions with Elliptica and BAM for BHNS mergers (with the intention to generalize to more).
 
