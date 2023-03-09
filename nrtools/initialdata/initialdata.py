@@ -15,7 +15,7 @@ class Initial_Data():
     params  : dictionary with the basic parameters of the binary
     id_exe  : path/to/initialdata/executable
     """
-    def __init__(self, path='.', params={'bh_mass':'8', 'ns_mass':'1.6', 'bh_chi_z':'0.0', 'binary_separation':'40', 'eos':'SLy'}, id_exe='$HOME/BHNS_Elliptica/Elliptica/Exe/elliptica'):
+    def __init__(self, path, params, id_exe):
         self.path = path
 
         if params==None and id_exe==None:
@@ -30,7 +30,7 @@ class Initial_Data():
             self.make_parfile(self.user_params)        
             self.write_bashfile()
 
-    def check_status():
+    def check_status(self):
         self.id_outdir = os.path.join(self.path,self.simname+'_00')
         try:
             num_res = os.listdir(self.id_outdir)
@@ -39,12 +39,13 @@ class Initial_Data():
             self.status = 'Not started'
         
         if self.status=='Ongoing':
-            with open(os.path.join(self.path,'job.log'),'r') as hrf:
+            log_file = [i for i in os.listdir(self.path) if i.endswith('.log')][0]
+            with open(os.path.join(self.path,log_file),'r') as hrf:
                 cont = hrf.read()
                 fertig = "} construct_initial_data :))"
                 if fertig in cont:
                     self.status = 'Done'
-        print("~~> Initial Data Status: ",self.status)
+        print("==> Initial Data Status: ",self.status)
 
     def make_parfile(self, params):
         parfile = Parameter_File(self.path, params)
