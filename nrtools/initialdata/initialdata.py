@@ -1,5 +1,6 @@
 import os
 from .parfile import *
+from .metadata import *
 
 ########################################
 # Main classes for Initial Data
@@ -17,13 +18,33 @@ class Initial_Data():
     def __init__(self, path='.', params={'bh_mass':'8', 'ns_mass':'1.6', 'bh_chi_z':'0.0', 'binary_separation':'40', 'eos':'SLy'}, id_exe='$HOME/BHNS_Elliptica/Elliptica/Exe/elliptica'):
         self.path = path
 
-        if params==None:
-            print("Need specific parameters of binary to simulate")
+        if params==None and id_exe==None:
+            print("==> I will assume ID exists already in ", self.path)
+            self.simname = self.path.split('/')[-1]
+            self.check_status()
+            self.md = Metadata(self.simname, self.path, self.status, self.id_outdir)
+        else:
+            print("==> Create new ID")
+            self.user_params = params
+            self.id_exe = id_exe
+            self.make_parfile(self.user_params)        
+            self.write_bashfile()
+
+    def check_status():
+        self.id_outdir = os.path.join(self.path,self.simname+'_00')
+        try:
+            num_res = os.listdir(self.id_outdir)
+            self.status = 'Ongoing'
+        except FileNotFoundError:
+            self.status = 'Not started'
         
-        self.user_params = params
-        self.id_exe = id_exe
-        self.make_parfile(self.user_params)        
-        self.write_bashfile()
+        if self.status=='Ongoing':
+            with open(os.path.join(self.path,'job.log'),'r') as hrf:
+                cont = hrf.read()
+                fertig = "} construct_initial_data :))"
+                if fertig in cont:
+                    self.status = 'Done'
+        print("~~> Initial Data Status: ",self.status)
 
     def make_parfile(self, params):
         parfile = Parameter_File(self.path, params)

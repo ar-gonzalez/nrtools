@@ -1,3 +1,3 @@
 #!/usr/bin/env python
 
-from . import initialdata, parfile
+from . import initialdata, parfile, metadata
