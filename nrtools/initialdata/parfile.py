@@ -1,3 +1,5 @@
+import os
+
 PARDIC = {
     'Project' : 'BH_NS_binary_initial_data',
     'BHNS_separation'                  : '@@', # fill data
@@ -121,10 +123,23 @@ class Parameter_File():
     path    : where the initial data should be produced
     params  : dictionary with the basic parameters of the binary
     """
-    def __init__(self, path='.', params={'bh_mass':'8', 'ns_mass':'1.6', 'bh_chi_z':'0.0', 'binary_separation':'40'}):
+    def __init__(self, path, params):
         self.path = path
-        self.user_params = params
-        self.pardic = self.parameter_dictionary()
+        if params==None:
+            PARDICR = {}
+            parfile = os.path.join(self.path,[i for i in os.listdir(self.path) if i.endswith('.par')][0])
+            with open(parfile) as f:
+                for line in f:
+                    key, value = line.strip().split(' = ')
+                    try:
+                        float(value)
+                    except ValueError:
+                        value = value.split('->')[-1]
+                    PARDICR[key] = value
+            self.pardic = PARDICR
+        else:
+            self.user_params = params
+            self.pardic = self.parameter_dictionary()
 
     def parameter_dictionary(self):
         params = self.user_params

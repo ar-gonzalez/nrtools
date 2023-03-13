@@ -1,6 +1,8 @@
+import numpy as np
 import os
 from .parfile import *
-from .metadata import *
+from .output import *
+import matplotlib.pyplot as plt
 
 ########################################
 # Main classes for Initial Data
@@ -17,17 +19,18 @@ class Initial_Data():
     """
     def __init__(self, path, params, id_exe):
         self.path = path
+        self.user_params = params
+        self.parfile = Parameter_File(self.path, self.user_params)
 
         if params==None and id_exe==None:
             print("==> I will assume ID exists already in ", self.path)
             self.simname = self.path.split('/')[-1]
-            self.check_status()
-            self.md = Metadata(self.simname, self.path, self.status, self.id_outdir)
+            self.check_status()  
+            self.ou = Output(self.simname, self.path, self.status, self.id_outdir)
         else:
             print("==> Create new ID")
-            self.user_params = params
             self.id_exe = id_exe
-            self.make_parfile(self.user_params)        
+            self.make_parfile()  
             self.write_bashfile()
 
     def check_status(self):
@@ -47,10 +50,8 @@ class Initial_Data():
                     self.status = 'Done'
         print("==> Initial Data Status: ",self.status)
 
-    def make_parfile(self, params):
-        parfile = Parameter_File(self.path, params)
-        pardic = parfile.pardic
-
+    def make_parfile(self):
+        pardic = self.parfile.pardic
         mm = float(pardic['BH_irreducible_mass'])
         cc = pardic['BH_chi_z']
         mbNS = pardic['NS_baryonic_mass']
@@ -98,3 +99,66 @@ class Initial_Data():
     def run_job(self):
         submitjob = 'sbatch ' + os.path.join(self.simpath,self.bashname)
         os.system(submitjob)
+
+    def check_accuracy(self):
+        # Expected values read from parfile:
+        pardic = self.parfile.pardic
+        bhmass_expected = float(pardic['BH_irreducible_mass'])
+        bhchiz_expected = float(pardic['BH_chi_z'])
+        nsmass_expected = float(pardic['NS_baryonic_mass'])
+        # Current obtained values:
+        dic = self.ou.id_dic
+        bhmass_current = float(dic['BH_irreducible_mass_current'])
+        bhchiz_current = float(dic['BH_chi_z_current'])
+        nsmass_current = float(dic['NS_baryonic_mass_current'])
+        # Get Errors:
+        bhmass_error = np.abs(bhmass_current-bhmass_expected)
+        bhchiz_error = np.abs(bhchiz_current-bhchiz_expected)
+        nsmass_error = np.abs(nsmass_current-nsmass_expected)
+        # Print status
+        print("==> Checking Accuracy: \n")
+        print("~ BH_irreducible_mass: expected: ", bhmass_expected, "| current: ", bhmass_current,"| Error= ",bhmass_error,"(",bhmass_error*100/bhmass_expected,"%) \n")
+        print("~ BH_chi_z: expected: ", bhchiz_expected, "| current: ", bhmass_current,"| Error= ",bhchiz_error,"(",bhchiz_error*100/bhchiz_expected,"%) \n")
+        print("~ NS_baryonic_mass: expected: ", nsmass_expected, "| current: ", bhmass_current,"| Error= ",nsmass_error,"(",nsmass_error*100/nsmass_expected,"%)\n")
+        return bhmass_error, bhchiz_error, nsmass_error
+
+    def check_convergence(self, patch = 'right_BH_around_front'):
+        res_folders, resolutions = self.ou.get_resolutions()
+
+        # Get ADM mass
+        madm = self.ou.get_value_from_resolutions('BHNS_ADM_mass')
+        plt.title(self.simname)
+        plt.plot(resolutions,madm,c='#1b9e77',marker='*')
+        plt.grid()
+        plt.xlabel(r'Resolution N')
+        plt.ylabel(r'$M_{\rm ADM}$')
+        plt.show()
+
+        # Get Hamiltonian and Momentum constraints
+        plt.title(self.simname)
+        hami = []
+        momx = []
+        momy = []
+        momz = []
+        for i, res in enumerate(res_folders):
+            diagnostics_dir = os.path.join(os.path.join(self.ou.outpath,res),'Diagnostics_00')
+            file_path = os.path.join(diagnostics_dir,patch + '_X0Y0Z0_0d.txt')
+            ham, mx, my, mz = np.loadtxt(file_path,comments='#',usecols=(3,9,6,12),unpack=True)
+            hami.append(ham[-1])
+            momx.append(mx[-1])
+            momy.append(my[-1])
+            momz.append(mz[-1])
+        
+        plt.plot(resolutions,hami,label='H',c='#1b9e77',marker='*')
+        plt.plot(resolutions,momx,label=r'$M^x$',c='#d95f02',marker='*')
+        plt.plot(resolutions,momy,label=r'$M^y$',c='#7570b3',marker='*')
+        plt.plot(resolutions,momz,label=r'$M^z$',c='#e7298a',marker='*')
+
+        plt.grid()
+        plt.yscale("log")
+        plt.xlabel(r'Resolution N')
+        plt.ylabel(r'$L^2$ norm')
+        plt.legend()
+        plt.show()
+
+

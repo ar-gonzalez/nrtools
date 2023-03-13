@@ -4,15 +4,16 @@ import os
 
 # Test with existing ID
 
-outdir = '/beegfs/mo63poy/BHNS_Elliptica/SLy_BH_m2.4_s0--NS_m1.6_s0--d25'
+outdir = '/home/agonzalez/Documents/PhD/NR/BHNS_evs/evolutions/SLy_BH_m2.8_s0.6--NS_m1.6_s0--d80'
+#outdir = '/beegfs/mo63poy/BHNS_Elliptica/SLy_BH_m2.4_s0--NS_m1.6_s0--d25'
 
 bhns_id = initialdata.Initial_Data(path=outdir,params=None,id_exe=None)
 
-metadata = bhns_id.md
+metadata = bhns_id.ou
 
 metadic = metadata.id_dic
 
-print(metadic['simname'])
+#print(metadic['simname'])
 
 metadata.read_md_sr() # get dic from 2nd highest resolution 
 
@@ -24,4 +25,12 @@ metadic['BHNS_binding_energy_error'] = str(float(metadic['BHNS_binding_energy'])
 
 metadic['Num_orbits_1PN'] = str(num_orbits_1pn(float(metadic['BH_irreducible_mass_current']),float(metadic['NS_ADM_mass']),float(metadic['BHNS_angular_velocity']),float(metadic['BHNS_ADM_mass'])))
 
-print(metadic)
+#print(metadic)
+
+#pardic = bhns_id.parfile.pardic
+#print(pardic)
+
+#quit()
+bhns_id.check_accuracy()
+
+bhns_id.check_convergence()
