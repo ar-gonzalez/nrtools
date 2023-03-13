@@ -50,7 +50,7 @@ class Metadata():
     def read_md_sr(self):
         # Reads md into a dictionary from the second highest resolution
         dic = {}
-        txt_sr_path = os.path.join(self.outpath,sr_path)
+        txt_sr_path = os.path.join(os.path.join(self.outpath,self.sr_path),'BHNS_properties.txt')
         with open(txt_sr_path) as file:
             dic['simname'] = self.simname
             for i,line in enumerate(file):

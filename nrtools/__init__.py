@@ -1,3 +1,3 @@
 #!/usr/bin/env python
 
-from . import initialdata
+from . import initialdata, utils
