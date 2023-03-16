@@ -1,0 +1,427 @@
+import os
+import re
+
+ID_HEADER = {
+    'physics' : 'adm z4 Gauge matter eos grhd EIDdataReader Invariants AHmod ADM_mass hydroanalysis',
+    # initial data
+    'EIDdataReader_exe'      : '@@',
+    'EIDdataReader_datadir'  : '@@',
+    'EIDdataReader_physics'  : 'BHNS',
+    'EIDdataReader_BHfiller' : 'ChebTn_Ylm_perfect_s2',
+    # eos
+    'eos'                    : 'pwp',
+    'eos_tab_file'           : '@@',
+    # checkpointing
+    'checkpoint'             : 'yes',
+    'checkpoint_dt_hours'    : '100',
+    'checkpoint_variables'   : 'all',
+    'ExitIfNAN'              : 'yes'
+}
+
+BASIC_SETUP = {
+    # basic setup
+    'order_centered'              : '4',
+    'order_advection'             : '4',
+    'advection_lopsided6'         : '2',
+    'advection_lopsided'          : '1',
+    'order_dissipation'           : '6',
+    'dissipation_factor'          : '0.5',
+    'dissipation_factor_level0'   : '0.5',
+    'bampi_timer_on'              : 'yes',
+    'bampi_lowlatency'            : 'yes',
+    'bampi_nghosts'               : '6',
+    'order_RP'                    : '6',
+    'order_RP_shells'             : '6',
+    'amr_nbuffer'                 : '6',
+    'amr_npunctures'              : '1',
+    'amr_lmax'                    : '@@',
+    'amr_lmax2'                   : '@@',
+    'amr_move_nxyz'               : '@@',
+    'nxyz'                        : '@@',
+    'amr_move_lcube'              : '@@',
+    'dxyz'                        : '@@',
+    'amr_bo_dxmax'                : '@@',
+    'amr'                         : 'bo newfmr move',
+    'amr_fmr'                     : 'nestedboxes',
+    'grid'                        : 'box bitant'
+}
+
+HYDRO = {
+    # hydro
+    'hrsc_nghosts'                : '4',
+    'hrsc_rec'                    : 'WENOZ',
+    'hrsc_TVD_limiter'            : 'MC2',
+    'hrsc_rec_metric'             : '@@',
+    'hrsc_flux'                   : '@@',
+    'grhd_C2P'                    : 'p_root',
+    'grhd_C2P_NewtonRaphsonTR'    : '1e-9',
+    'grhd_C2P_NewtonRaphsonNR'    : '100',
+    'grhd_vmax'                   : '0.999',
+    'grhd_Wlor_max'               : '1e5',
+    'grhd_use_atmosphere'         : 'yes',
+    'grhd_use_atmosphere'         : 'ColdStatic',
+    'grhd_atm_factor'             : '100',
+    'grhd_atm_level'              : '1e-12',
+    'grhd_use_atmosphere_mask'    : 'yes',
+    'grhd_use_atmosphere_prerhs'  : 'yes',
+    'grhd_use_atmosphere_postrhs' : 'no',
+    'matter_interpolate_order'    : '4',
+    'matter_interpolate_scheme_restriction'  : 'linear',
+    'matter_interpolate_scheme_prolongation' : 'linear',
+    'conservative_amr'            : 'yes',
+    'camr_treshold'               : '1e20'
+}
+    
+ENTROPY_VISCOSITY = {
+    # entropy-viscosity
+    'cE'                           : '1',
+    'cmax'                         : '1',
+    'grhd_visc_method'             : 'phys',
+    'grhd_visc_compute'            : 'prestep', 
+    'grhd_visc_method_on_t'        : '0',
+    'grhd_visc_method_off_t'       : '0'
+}
+
+EVOLUTION = {
+    # evolution
+    'evolution_method'            : 'rk',
+    'evolution_method_rk'         : 'rk4g',
+    'dtfac'                       : '0.25',
+    'finaltime'                   : '20000',
+    'z4_normalizedetg'            : 'yes',
+    'z4_subtractA'                : 'yes',
+    'z4_chi_div_floor'            : '1e-5',
+    'z4_initial_lapse'            : 'donothing',
+    'z4_initial_shift'            : 'zero',
+    'z4_lapse'                    : '1+log withshift',
+    'z4_shift'                    : 'withoutB withShiftadv',
+    'z4_shiftalphapower'          : '0.0',
+    'z4_shiftdriver'              : '@@', 
+    'z4_shiftgammacoeff'          : '1.0',
+    'z4_kappa1'                   : '0.02', 
+    'z4_kappa2'                   : '0.0',
+    'punctures_lapse'             : 'psiBL^(-2)'
+}
+
+OUTPUT = {
+    # output
+    '0douttime'                   : '@@',
+    '0doutput'                    : 'alpha ham momx momy momz grhd_D grhd_rho hydroa_uesc hydroa_Du hydroa_Db hydroa_Dh hydroa_etot hydroa_Px hydroa_Py hydroa_Pz hydroa_Pux hydroa_Puy hydroa_Puz rpsi4 ipsi4',
+    '1douttime'                   : '@@',
+    '1doutput'                    : 'alpha grhd_rho',
+    '1doutinterpolate'            : 'no',
+    '1doutputall'                 : 'no',
+    '2douttime'                   : '@@',
+    '2doutput'                    : 'alpha bssn_chi grhd_rho ham momx momy momz grhd_D grhd_vx grhd_v2 grhd_epsl grhd_p hydroa_uesc hydroa_Du hydroa_Db hydroa_Dh hydroa_etot',
+    '2dformat'                    : 'vtk binary float',
+    '2doutinterpolate'            : 'no',
+    '2doutputr'                   : 'sphere_data'
+}
+
+BOUNDARY_AND_GAUGE = {
+    # boundary
+    'boundary'                               : 'background radcentered',
+    # gauge
+    'Gauge'                                  : 'moving_puncture',
+    'moving_puncture_track_method'           : 'extint',
+    'moving_puncture_fixz'                   : 'none',
+    'compute_moving_puncture_distance'       : 'line',
+    'compute_moving_puncture_distance_method': 'AHsimpleNSBH'
+}
+    
+AHMOD = {
+    # AHmod
+    'AHmod_verbose'               : 'yes',
+    'AHmod_ntheta'                : '100',
+    'AHmod_nphi'                  : '100',
+    'AHmod_nhorizons'             : '1',
+    'AHmod_searchMTS'             : '1 0.0  30000.0  1',
+    'AHmod_uselast'               : 'yes',
+    'AHmod_initial_guess_expand'  : '1.0',
+    'AHmod_LevelOffset'           : '1',
+    'AHmod_UseOptimalLevel'       : 'no',
+    'AHmod_flow_iter'             : '5000',
+    'AHmod_mass_tol'              : '5.0e-06',
+    'AHmod_hmean_tol'             : '100.0',
+    'AHmod_time'                  : '0.5',
+    'AHmod_shrinking'             : '2.0',
+    'AHmod_output'                : 'yes',
+    'AHmod_output_xyt'            : 'no',
+    'AHmod_output_lm'             : 'no'
+}  
+    
+INVARIANTS = {
+    # invariants
+    'ntheta'                                  : '47',
+    'nphi'                                    : '46',
+    'invariants_compute_modes'                : 'yes',
+    'invariants_modes_r'                      : '300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 2000 2500',
+    'invariants_modes_lmin'                   : '0',
+    'invariants_modes_lmax'                   : '4',
+    'invariants_energy_r'                     : '300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 2000 2500',
+    'gauss_codacci_mainardi'                  : 'standard',
+    'invariants_order'                        : '4',
+    'invariants_compute_modes_general'        : 'no',
+    'mode_lmax'                               : '6',
+    'invariants_modes_output'                 : 'all',
+    'Invariants_output_time'                  : '0.5'
+}  
+
+HYDROANALYSIS = {
+    # hydroanalysis
+    'hydroanalysis_ejecta_spheres'            : 'yes',
+    'hydroanalysis_ejecta_spheres_radius'     : '200',
+    'hydroanalysis_ejecta_nradius'            : '12',
+    'hydroanalysis_ejecta_dradius'            : '100',
+    'hydroanalysis_Mbar_radius'               : '8',
+    'hydroanalysis_Mbar_nradius'              : '10',
+    'hydroanalysis_Mbar_dradius'              : '0.5',
+    'hydroanalysis_rATM'                      : '1e-25',
+    'hydroa_mode_projection'                  : 'yes'
+}   
+    
+ADM_MASS = {
+    # ADM Mass
+    'ADM_mass_ncircles'         : '101',
+    'ADM_mass_npoints'          : '80',
+    'ADM_mass_lmin'             : '0',
+    'ADM_mass_lmax'             : '7',
+    'ADM_mass_r'                : '300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 2000 2500'
+}
+
+########################################
+# Parameter File class
+########################################
+
+class Parameter_File():
+    """
+    ------------------
+    Initialization:
+    ------------------
+    path          : where to put the parameter file
+    ev_exe        : path/to/executable
+    resolution    : resolution for the simulation
+    lmax, lmax2   : refinement levels for obj1 and obj2
+    flux          : flux reconstruction scheme (LLF or EFL)
+
+    Writes the parameter file with initialization if non existent.
+    """
+    def __init__(self, path, ev_path, initial_data, resolution, lmax, lmax2, flux):
+        self.path = path
+        if len([i for i in os.listdir(self.path) if i.endswith('.par')][0])>0:
+            EV_PARDICR = {}
+            parfile = os.path.join(self.path,[i for i in os.listdir(self.path) if i.endswith('.par')][0])
+            with open(parfile) as f:
+                for line in f:
+                    if len(line.strip())==0 or line.strip().startswith('#'):
+                        continue
+                    else:
+                        key, value = line.strip().split(' = ')
+                        EV_PARDICR[key] = value
+            self.pardic = EV_PARDICR
+        else:
+            self.pardic = self.parameter_dictionary(ev_path, initial_data, resolution, lmax, lmax2, flux)
+
+    def parameter_dictionary(self, ev_path, initial_data, resolution, lmax, lmax2, flux):
+        # get grid specific parameters for the binary:
+        grid_params = self.get_grid_params(initial_data, resolution, lmax, lmax2, flux)
+        #ev_dir = ev_exe.split('/')[-2:].join('/')
+        eos_tab_path = os.path.join(ev_path,'src/projects/eos/tab/pwpfits')
+
+        ## Fill necessary values:
+
+        # ID_HEADER
+        ID_HEADER['EIDdataReader_exe'] = initial_data.id_exe
+        ID_HEADER['EIDdataReader_datadir'] = initial_data.ou.hr_path
+        eos = initial_data.parfile.pardic['NS_EoS_description']
+        try:
+            ID_HEADER['eos_tab_file'] = os.path.join(eos_tab_path,'eos_'+eos.lower()+'.pwp')
+        except:
+            print('ERROR: EOS tab file not found!')
+
+        # BASIC_SETUP
+        BASIC_SETUP['amr_lmax'] = grid_params['amr_lmax']
+        BASIC_SETUP['amr_lmax2'] = grid_params['amr_lmax2']
+        BASIC_SETUP['amr_move_nxyz'] = grid_params['amr_move_nxyz']
+        BASIC_SETUP['nxyz']     = grid_params['nxyz']     
+        BASIC_SETUP['amr_move_lcube'] = grid_params['amr_move_lcube']
+        BASIC_SETUP['dxyz']          = grid_params['dxyz']
+        BASIC_SETUP['amr_bo_dxmax']  = grid_params['amr_bo_dxmax']
+
+        # HYDRO
+        if flux=='LLF':
+            HYDRO['hrsc_rec_metric'] = 'LAG6'
+            HYDRO['hrsc_flux']  = 'LLF'
+        elif flux=='EFL':
+            HYDRO['hrsc_rec_HO'] = 'WENOoptimal'
+            HYDRO['hrsc_rec_metric'] = 'LAG4'
+            HYDRO['hrsc_flux']  = 'HOEV2'
+            HYDRO = HYDRO + ENTROPY_VISCOSITY
+        
+        # EVOLUTION
+        EVOLUTION['z4_shiftdriver'] = grid_params['z4_shiftdriver']
+
+        # OUTPUT
+        OUTPUT['0douttime'] = grid_params['0douttime']
+        OUTPUT['1douttime'] = grid_params['1douttime']
+        OUTPUT['2douttime'] = grid_params['2douttime']
+
+        # Make parfile
+        self.make_parfile(ID_HEADER, HYDRO, EVOLUTION, OUTPUT, BOUNDARY_AND_GAUGE, AHMOD, INVARIANTS, HYDROANALYSIS, ADM_MASS)
+
+        EV_PARDIC = ID_HEADER + HYDRO + EVOLUTION + OUTPUT + BOUNDARY_AND_GAUGE + AHMOD + INVARIANTS + HYDROANALYSIS + ADM_MASS
+
+        return EV_PARDIC
+
+
+    def get_grid_params(self, initial_data, resolution, lmax, lmax2, flux, verbose=True):
+        grid_params = {}
+        grid_params['amr_move_nxyz'] = resolution
+        grid_params['nxyz'] = 2*grid_params['amr_move_nxyz']
+        grid_params['amr_lmax'] = lmax
+        grid_params['amr_lmax2'] = lmax2
+        grid_params['amr_move_lcube'] = 4
+        grid_params['dtfac'] = 0.25
+
+        assert(grid_params['amr_lmax'] >= grid_params['amr_lmax2'])
+
+        # read these params:
+        params=["BH_Christodoulou_mass_current","BH_max_radius","NS_ADM_mass","NS_max_radius","BHNS_separation"]
+
+        # read all file and get the parameters
+        id_file = os.path.join(initial_data.ou.hr_path, 'BHNS_properties.txt')
+        param_dict = {}
+        with open(id_file,"r") as fp:
+            line = fp.readline()
+            while line:
+                line = fp.readline()
+                for p in params:
+                    if re.search(r"^{}[\W]".format(p),line):
+                        # trim new line and white spaces
+                        line = line.replace('\n', "")
+                        line = line.replace(" ", "")
+                        param_dict[p] = (float(line.split('=')[1]))
+        
+        # diameter:
+        BH_d = 2*param_dict["BH_max_radius"]
+        NS_d = 2*param_dict["NS_max_radius"]
+        NS_m = param_dict["NS_ADM_mass"]
+        BH_m = param_dict["BH_Christodoulou_mass_current"]
+        init_s= param_dict["BHNS_separation"]
+
+        ## compute:
+        ## note: to output correctly you should compute things from finest level
+        dxyz_fine = round((NS_d*(1.15))/(grid_params['amr_move_nxyz']),6) # NOTE: 15% bigger of NS diameter
+        grid_params['dxyz'] = dxyz_fine * (2**grid_params['amr_lmax2']) # coarsest grid space
+        grid_params['amr_bo_dxmax'] = (2.4/grid_params['amr_move_nxyz'])*64
+        grid_params['douttime0']    = grid_params['dxyz']/(2**(grid_params['amr_lmax'])) * 2**int(amr_lmax/3)/dtfac
+        grid_params['douttime1']    = grid_params['dxyz']/(2**(grid_params['amr_lmax'])) * 2**int(grid_params['amr_lmax']/3)/grid_params['dtfac']
+        grid_params['douttime2']    = grid_params['dxyz']/(2**(grid_params['amr_lmax'])) * 2**int(grid_params['amr_lmax']/3)/grid_params['dtfac']*4
+        grid_params['z4_shiftdriver'] = 2.0/(BH_m+NS_m)
+
+        NS_box_len = grid_params['dxyz']/(2**(grid_params['amr_lmax2'])) * grid_params['amr_move_nxyz']
+        BH_box_len = grid_params['dxyz']/(2**(grid_params['amr_lmax'])) * grid_params['amr_move_nxyz']
+
+        BH_box_len2= "not defined, since there is only one moving box"
+        if (grid_params['amr_lmax'] - grid_params['amr_move_lcube'] > 1):
+            BH_box_len2  = grid_params['dxyz']/(2**(grid_params['amr_lmax']-1)) * grid_params['amr_move_nxyz']
+        else:
+            BH_box_len2  = grid_params['dxyz']/(2**(grid_params['amr_lmax']-1)) * grid_params['nxyz']
+
+        # radii for GW, ADM etc.
+        radii = ""
+        outer_r_int = int(grid_params['dxyz']*grid_params['nxyz']/2)
+        if outer_r_int > 1500:
+            for r in range(300,1500,200):
+                radii += "{} ".format(r)
+        if outer_r_int > 6000:
+            for r in range(1500,6000,500):
+                radii += "{} ".format(r)
+        for r in range(6000,outer_r_int,1000):
+            radii += "{} ".format(r)
+        radii += "{} ".format(outer_r_int)
+
+        #grid_params['invariants_modes_r'] = radii
+        #grid_params['invariants_energy_r'] = radii
+        #grid_params['ADM_mass_r'] = radii
+        if verbose:
+            print("dxyz           = {} # NS_diameter*(1.15))/(amr_move_nxyz)*(2**amr_lmax2)".format((grid_params['dxyz'])))
+            print("amr_bo_dxmax   = {} # (2.4/amr_move_nxyz)*64 ".format((grid_params['amr_bo_dxmax'])))
+            print("z4_shiftdriver = {} # 2.0/(BH_m+NS_m)".format((grid_params['z4_shiftdriver'])))
+            print("0douttime    = {} # dxyz/(2**(amr_lmax)) * 2**int(amr_lmax/3)/dtfac".format((grid_params['douttime0'])))
+            print("1douttime    = {} # dxyz/(2**(amr_lmax)) * 2**int(amr_lmax/3)/dtfac".format((grid_params['douttime1'])))
+            print("2douttime    = {} # dxyz/(2**(amr_lmax)) * 2**int(amr_lmax/3)/dtfac*4".format((grid_params['douttime2'])))
+            print("AHmod_time   = {} # 2douttime".format((grid_params['douttime2'])))
+            print("Invariants_output_time = {} # 2douttime".format((grid_params['douttime2'])))
+            print("extraction radii = {}".format(radii))
+
+            print("\n\n## Configs:")
+
+            ## calculate moving boxes consistency:
+            ## the size of the smallest non moving level (box)
+            small_non_move_box = dxyz_fine* 2**(grid_params['amr_lmax2'] - grid_params['amr_move_lcube'])* grid_params['nxyz']
+            ## the biggest moving box
+            big_move_box = dxyz_fine * 2**(grid_params['amr_lmax2'] - grid_params['amr_move_lcube']-1)*grid_params['amr_move_nxyz']
+
+            ## 2*big_move_box, coeffs 2 in order to account for buffers
+            if (small_non_move_box - (2*big_move_box + init_s) > 0):
+                print("# MOVING BOXES ARE OK.")
+            else:
+                print("# WARNING: MOVING BOXES DO NOT FIT INTO FIXED LEVEL!")
+
+            print("# BHNS separation = {}".format(init_s))
+            print("# dxyz_finest_NS  = {} # dxyz in finest level around the NS after roundoff".format(dxyz_fine))
+            print("# dxyz_finest_BH  = {} # dxyz in finest level around the BH after roundoff".format(dxyz_fine/2**(grid_params['amr_lmax']-grid_params['amr_lmax2'])))
+            print("# BH_m = {}".format(BH_m))
+            print("# NS_m = {}".format(NS_m))
+            print("# BH_diameter = {}".format(BH_d))
+            print("# NS_diameter = {}".format(NS_d))
+            print("# NS_finest_box_len = {}".format(NS_box_len))
+            print("# BH_finest_box_len = {}".format(BH_box_len))
+            if (grid_params['amr_lmax'] - grid_params['amr_move_lcube'] > 1):
+                print("# BH_next_finest_box_len = {} > {} ???"
+                        " should BH_next_finest_box_len > (1.25)*BH_diameter".
+                        format(BH_box_len2,(1.25)*BH_d))
+
+                print("# BH_m/h_min|finest     = {} > 20 ??? "
+                    " see https://arxiv.org/pdf/1007.4789.pdf ".
+                    format(BH_m/(grid_params['dxyz']/2**grid_params['amr_lmax'])))
+
+                print("# BH_m/h_min|2nd_finest = {} > 20 ??? "
+                    " see https://arxiv.org/pdf/1007.4789.pdf ".
+                    format(BH_m/(grid_params['dxyz']/2**(grid_params['amr_lmax']-1))))
+                    
+                print("# outer boundary radius ~ {} > {} ???"
+                    " should dxyz*nxyz/2 > 5*init_separation".
+                    format(grid_params['dxyz'] * grid_params['nxyz']/2,5*init_s))
+                
+def make_parfile(self, ID_HEADER, HYDRO, EVOLUTION, OUTPUT, BOUNDARY_AND_GAUGE, AHMOD, INVARIANTS, HYDROANALYSIS, ADM_MASS):
+    # Write par file
+    with open(os.path.join(self.path,'bam_evo.par'), 'w') as f:
+        f.write("\n############################################################################# \n # ID_HEADER \n")
+        for key, value in ID_HEADER.items():
+            f.write('%s =   %s\n' % (key, value))
+        f.write("\n############################################################################# \n # HYDRO \n")
+        for key, value in HYDRO.items():
+            f.write('%s =   %s\n' % (key, value))
+        f.write("\n############################################################################# \n # EVOLUTION \n")
+        for key, value in EVOLUTION.items():
+            f.write('%s =   %s\n' % (key, value))
+        f.write("\n############################################################################# \n # OUTPUT \n")
+        for key, value in OUTPUT.items():
+            f.write('%s =   %s\n' % (key, value))
+        f.write("\n############################################################################# \n # BOUNDARY_AND_GAUGE \n")
+        for key, value in BOUNDARY_AND_GAUGE.items():
+            f.write('%s =   %s\n' % (key, value))
+        f.write("\n############################################################################# \n # AHMOD \n")
+        for key, value in AHMOD.items():
+            f.write('%s =   %s\n' % (key, value))
+        f.write("\n############################################################################# \n # INVARIANTS \n")
+        for key, value in INVARIANTS.items():
+            f.write('%s =   %s\n' % (key, value))
+        f.write("\n############################################################################# \n # HYDROANALYSIS \n")
+        for key, value in HYDROANALYSIS.items():
+            f.write('%s =   %s\n' % (key, value))
+        f.write("\n############################################################################# \n # ADM_MASS \n")
+        for key, value in ADM_MASS.items():
+            f.write('%s =   %s\n' % (key, value))

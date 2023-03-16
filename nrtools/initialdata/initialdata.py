@@ -2,10 +2,11 @@ import numpy as np
 import os
 from .parfile import *
 from .output import *
+from ..evolution.evolution import *
 import matplotlib.pyplot as plt
 
 ########################################
-# Main classes for Initial Data
+# Main class for Initial Data
 ########################################
 
 class Initial_Data():
@@ -161,4 +162,21 @@ class Initial_Data():
         plt.legend()
         plt.show()
 
-
+    def evolve(self, ev_path, resolution=64, lmax=10, lmax2=6, flux='LLF'):
+        '''
+        Input: path/to/evolution/code, resolution, refinement levels for BH,
+                refinement levels for NS, flux reconstruction scheme
+        Returns: initializes Evolution object
+        '''
+        if self.status=='Done':
+            ev_name = "bam_"+str(resolution)+"_"+str(lmax)+'_'+flux
+            path = os.path.join(self.path,ev_name)
+            try:
+                os.mkdir(path)
+            except FileExistsError:
+                print('Directory exists: ',path)
+            evolution = Evolution(path, ev_path, self.ou, resolution, lmax, lmax2, flux)
+        else:
+            print("Error: Initial data is not finished!")
+            evolution = None
+        return evolution
