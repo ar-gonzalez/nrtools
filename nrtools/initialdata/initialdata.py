@@ -2,7 +2,7 @@ import numpy as np
 import os
 from .parfile import *
 from .output import *
-from ..evolution.evolution import *
+from ..evolution.evolution import Evolution
 import matplotlib.pyplot as plt
 
 ########################################
@@ -22,15 +22,15 @@ class Initial_Data():
         self.path = path
         self.user_params = params
         self.parfile = Parameter_File(self.path, self.user_params)
+        self.id_exe = id_exe
 
-        if params==None and id_exe==None:
+        if params==None:
             print("==> I will assume ID exists already in ", self.path)
             self.simname = self.path.split('/')[-1]
             self.check_status()  
             self.ou = Output(self.simname, self.path, self.status, self.id_outdir)
         else:
             print("==> Create new ID")
-            self.id_exe = id_exe
             self.make_parfile()  
             self.write_bashfile()
 
@@ -43,7 +43,7 @@ class Initial_Data():
             self.status = 'Not started'
         
         if self.status=='Ongoing':
-            log_file = [i for i in os.listdir(self.path) if i.endswith('.log')][0]
+            log_file = [i for i in os.listdir(self.path) if i.startswith('job') and i.endswith('.log')][0]
             with open(os.path.join(self.path,log_file),'r') as hrf:
                 cont = hrf.read()
                 fertig = "} construct_initial_data :))"
@@ -161,7 +161,7 @@ class Initial_Data():
         plt.ylabel(r'$L^2$ norm')
         plt.legend()
         plt.show()
-
+    
     def evolve(self, ev_path, resolution=64, lmax=10, lmax2=6, flux='LLF'):
         '''
         Input: path/to/evolution/code, resolution, refinement levels for BH,
@@ -175,8 +175,9 @@ class Initial_Data():
                 os.mkdir(path)
             except FileExistsError:
                 print('Directory exists: ',path)
-            evolution = Evolution(path, ev_path, self.ou, resolution, lmax, lmax2, flux)
+            evolution = Evolution(path, ev_path, self, resolution, lmax, lmax2, flux)
         else:
             print("Error: Initial data is not finished!")
             evolution = None
         return evolution
+    

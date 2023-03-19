@@ -18,7 +18,7 @@ ID_HEADER = {
     'ExitIfNAN'              : 'yes'
 }
 
-BASIC_SETUP = {
+GRID_SETUP = {
     # basic setup
     'order_centered'              : '4',
     'order_advection'             : '4',
@@ -193,7 +193,7 @@ ADM_MASS = {
 # Parameter File class
 ########################################
 
-class Parameter_File():
+class Ev_Parameter_File():
     """
     ------------------
     Initialization:
@@ -208,7 +208,7 @@ class Parameter_File():
     """
     def __init__(self, path, ev_path, initial_data, resolution, lmax, lmax2, flux):
         self.path = path
-        if len([i for i in os.listdir(self.path) if i.endswith('.par')][0])>0:
+        if len([i for i in os.listdir(self.path) if i.endswith('.par')])>0:
             EV_PARDICR = {}
             parfile = os.path.join(self.path,[i for i in os.listdir(self.path) if i.endswith('.par')][0])
             with open(parfile) as f:
@@ -219,7 +219,18 @@ class Parameter_File():
                         key, value = line.strip().split(' = ')
                         EV_PARDICR[key] = value
             self.pardic = EV_PARDICR
-        else:
+        else: 
+            self.id_header = ID_HEADER
+            self.grid_setup = GRID_SETUP
+            self.hydro = HYDRO
+            self.evolution = EVOLUTION
+            self.output = OUTPUT
+            self.boundary_and_gauge = BOUNDARY_AND_GAUGE
+            self.ahmod = AHMOD
+            self.invariants = INVARIANTS
+            self.hydroanalysis = HYDROANALYSIS
+            self.adm_mass = ADM_MASS
+            self.entropy_viscosity = ENTROPY_VISCOSITY
             self.pardic = self.parameter_dictionary(ev_path, initial_data, resolution, lmax, lmax2, flux)
 
     def parameter_dictionary(self, ev_path, initial_data, resolution, lmax, lmax2, flux):
@@ -231,45 +242,45 @@ class Parameter_File():
         ## Fill necessary values:
 
         # ID_HEADER
-        ID_HEADER['EIDdataReader_exe'] = initial_data.id_exe
-        ID_HEADER['EIDdataReader_datadir'] = initial_data.ou.hr_path
+        self.id_header['EIDdataReader_exe'] = initial_data.id_exe
+        self.id_header['EIDdataReader_datadir'] = initial_data.ou.hr_path
         eos = initial_data.parfile.pardic['NS_EoS_description']
         try:
-            ID_HEADER['eos_tab_file'] = os.path.join(eos_tab_path,'eos_'+eos.lower()+'.pwp')
+            self.id_header['eos_tab_file'] = os.path.join(eos_tab_path,'eos_'+eos.lower()+'.pwp')
         except:
             print('ERROR: EOS tab file not found!')
 
-        # BASIC_SETUP
-        BASIC_SETUP['amr_lmax'] = grid_params['amr_lmax']
-        BASIC_SETUP['amr_lmax2'] = grid_params['amr_lmax2']
-        BASIC_SETUP['amr_move_nxyz'] = grid_params['amr_move_nxyz']
-        BASIC_SETUP['nxyz']     = grid_params['nxyz']     
-        BASIC_SETUP['amr_move_lcube'] = grid_params['amr_move_lcube']
-        BASIC_SETUP['dxyz']          = grid_params['dxyz']
-        BASIC_SETUP['amr_bo_dxmax']  = grid_params['amr_bo_dxmax']
-
+        # GRID_SETUP
+        self.grid_setup['amr_lmax'] = grid_params['amr_lmax']
+        self.grid_setup['amr_lmax2'] = grid_params['amr_lmax2']
+        self.grid_setup['amr_move_nxyz'] = grid_params['amr_move_nxyz']
+        self.grid_setup['nxyz']     = grid_params['nxyz']     
+        self.grid_setup['amr_move_lcube'] = grid_params['amr_move_lcube']
+        self.grid_setup['dxyz']          = grid_params['dxyz']
+        self.grid_setup['amr_bo_dxmax']  = grid_params['amr_bo_dxmax']
+        
         # HYDRO
         if flux=='LLF':
-            HYDRO['hrsc_rec_metric'] = 'LAG6'
-            HYDRO['hrsc_flux']  = 'LLF'
+            self.hydro['hrsc_rec_metric'] = 'LAG6'
+            self.hydro['hrsc_flux']  = 'LLF'
         elif flux=='EFL':
-            HYDRO['hrsc_rec_HO'] = 'WENOoptimal'
-            HYDRO['hrsc_rec_metric'] = 'LAG4'
-            HYDRO['hrsc_flux']  = 'HOEV2'
-            HYDRO = HYDRO + ENTROPY_VISCOSITY
+            self.hydro['hrsc_rec_HO'] = 'WENOoptimal'
+            self.hydro['hrsc_rec_metric'] = 'LAG4'
+            self.hydro['hrsc_flux']  = 'HOEV2'
+            self.hydro = self.hydro + ENTROPY_VISCOSITY
         
         # EVOLUTION
-        EVOLUTION['z4_shiftdriver'] = grid_params['z4_shiftdriver']
+        self.evolution['z4_shiftdriver'] = grid_params['z4_shiftdriver']
 
         # OUTPUT
-        OUTPUT['0douttime'] = grid_params['0douttime']
-        OUTPUT['1douttime'] = grid_params['1douttime']
-        OUTPUT['2douttime'] = grid_params['2douttime']
+        self.output['0douttime'] = grid_params['douttime0']
+        self.output['1douttime'] = grid_params['douttime1']
+        self.output['2douttime'] = grid_params['douttime2']
 
         # Make parfile
-        self.make_parfile(ID_HEADER, HYDRO, EVOLUTION, OUTPUT, BOUNDARY_AND_GAUGE, AHMOD, INVARIANTS, HYDROANALYSIS, ADM_MASS)
-
-        EV_PARDIC = ID_HEADER + HYDRO + EVOLUTION + OUTPUT + BOUNDARY_AND_GAUGE + AHMOD + INVARIANTS + HYDROANALYSIS + ADM_MASS
+        self.make_parfile()
+        # ID_HEADER, HYDRO, EVOLUTION, OUTPUT, BOUNDARY_AND_GAUGE, AHMOD, INVARIANTS, HYDROANALYSIS, ADM_MASS
+        EV_PARDIC = self.id_header + self.grid_setup + self.hydro + self.evolution + self.output + self.boundary_and_gauge + self.ahmod + self.invariants + self.hydroanalysis + self.adm_mass
 
         return EV_PARDIC
 
@@ -289,7 +300,7 @@ class Parameter_File():
         params=["BH_Christodoulou_mass_current","BH_max_radius","NS_ADM_mass","NS_max_radius","BHNS_separation"]
 
         # read all file and get the parameters
-        id_file = os.path.join(initial_data.ou.hr_path, 'BHNS_properties.txt')
+        id_file = initial_data.ou.txt_path 
         param_dict = {}
         with open(id_file,"r") as fp:
             line = fp.readline()
@@ -314,7 +325,7 @@ class Parameter_File():
         dxyz_fine = round((NS_d*(1.15))/(grid_params['amr_move_nxyz']),6) # NOTE: 15% bigger of NS diameter
         grid_params['dxyz'] = dxyz_fine * (2**grid_params['amr_lmax2']) # coarsest grid space
         grid_params['amr_bo_dxmax'] = (2.4/grid_params['amr_move_nxyz'])*64
-        grid_params['douttime0']    = grid_params['dxyz']/(2**(grid_params['amr_lmax'])) * 2**int(amr_lmax/3)/dtfac
+        grid_params['douttime0']    = grid_params['dxyz']/(2**(grid_params['amr_lmax'])) * 2**int(grid_params['amr_lmax']/3)/grid_params['dtfac']
         grid_params['douttime1']    = grid_params['dxyz']/(2**(grid_params['amr_lmax'])) * 2**int(grid_params['amr_lmax']/3)/grid_params['dtfac']
         grid_params['douttime2']    = grid_params['dxyz']/(2**(grid_params['amr_lmax'])) * 2**int(grid_params['amr_lmax']/3)/grid_params['dtfac']*4
         grid_params['z4_shiftdriver'] = 2.0/(BH_m+NS_m)
@@ -394,34 +405,36 @@ class Parameter_File():
                 print("# outer boundary radius ~ {} > {} ???"
                     " should dxyz*nxyz/2 > 5*init_separation".
                     format(grid_params['dxyz'] * grid_params['nxyz']/2,5*init_s))
+    
+        return grid_params
                 
-def make_parfile(self, ID_HEADER, HYDRO, EVOLUTION, OUTPUT, BOUNDARY_AND_GAUGE, AHMOD, INVARIANTS, HYDROANALYSIS, ADM_MASS):
-    # Write par file
-    with open(os.path.join(self.path,'bam_evo.par'), 'w') as f:
-        f.write("\n############################################################################# \n # ID_HEADER \n")
-        for key, value in ID_HEADER.items():
-            f.write('%s =   %s\n' % (key, value))
-        f.write("\n############################################################################# \n # HYDRO \n")
-        for key, value in HYDRO.items():
-            f.write('%s =   %s\n' % (key, value))
-        f.write("\n############################################################################# \n # EVOLUTION \n")
-        for key, value in EVOLUTION.items():
-            f.write('%s =   %s\n' % (key, value))
-        f.write("\n############################################################################# \n # OUTPUT \n")
-        for key, value in OUTPUT.items():
-            f.write('%s =   %s\n' % (key, value))
-        f.write("\n############################################################################# \n # BOUNDARY_AND_GAUGE \n")
-        for key, value in BOUNDARY_AND_GAUGE.items():
-            f.write('%s =   %s\n' % (key, value))
-        f.write("\n############################################################################# \n # AHMOD \n")
-        for key, value in AHMOD.items():
-            f.write('%s =   %s\n' % (key, value))
-        f.write("\n############################################################################# \n # INVARIANTS \n")
-        for key, value in INVARIANTS.items():
-            f.write('%s =   %s\n' % (key, value))
-        f.write("\n############################################################################# \n # HYDROANALYSIS \n")
-        for key, value in HYDROANALYSIS.items():
-            f.write('%s =   %s\n' % (key, value))
-        f.write("\n############################################################################# \n # ADM_MASS \n")
-        for key, value in ADM_MASS.items():
-            f.write('%s =   %s\n' % (key, value))
+    def make_parfile(self):
+        # Write par file
+        with open(os.path.join(self.path,'bam_evo.par'), 'w') as f:
+            f.write("\n############################################################################# \n # ID_HEADER \n")
+            for key, value in self.id_header.items():
+                f.write('%s =   %s\n' % (key, value))
+            f.write("\n############################################################################# \n # HYDRO \n")
+            for key, value in self.hydro.items():
+                f.write('%s =   %s\n' % (key, value))
+            f.write("\n############################################################################# \n # EVOLUTION \n")
+            for key, value in self.evolution.items():
+                f.write('%s =   %s\n' % (key, value))
+            f.write("\n############################################################################# \n # OUTPUT \n")
+            for key, value in self.output.items():
+                f.write('%s =   %s\n' % (key, value))
+            f.write("\n############################################################################# \n # BOUNDARY_AND_GAUGE \n")
+            for key, value in self.boundary_and_gauge.items():
+                f.write('%s =   %s\n' % (key, value))
+            f.write("\n############################################################################# \n # AHMOD \n")
+            for key, value in self.ahmod.items():
+                f.write('%s =   %s\n' % (key, value))
+            f.write("\n############################################################################# \n # INVARIANTS \n")
+            for key, value in self.invariants.items():
+                f.write('%s =   %s\n' % (key, value))
+            f.write("\n############################################################################# \n # HYDROANALYSIS \n")
+            for key, value in self.hydroanalysis.items():
+                f.write('%s =   %s\n' % (key, value))
+            f.write("\n############################################################################# \n # ADM_MASS \n")
+            for key, value in self.adm_mass.items():
+                f.write('%s =   %s\n' % (key, value))
