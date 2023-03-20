@@ -13,8 +13,6 @@ metadata = bhns_id.ou
 
 metadic = metadata.id_dic
 
-#print(metadic['simname'])
-
 metadata.read_md_sr() # get dic from 2nd highest resolution 
 
 metadic2 = metadata.id_dic2
@@ -30,3 +28,4 @@ metadic['Num_orbits_1PN'] = str(num_orbits_1pn(float(metadic['BH_irreducible_mas
 #bhns_id.check_convergence()
 
 bhns_ev = bhns_id.evolve(ev_path='path/to/bam', resolution=64, lmax=10, lmax2=6, flux='LLF')
+bhns_ev.write_bashfile(bashname = 'run_bam.sh', cluster='DRACO')

@@ -22,7 +22,8 @@ class Evolution():
         self.evname = self.path.split('/')[-1]
         self.ev_path = ev_path
         self.check_status()
-        self.parfile = Ev_Parameter_File(self.path, self.ev_path, initial_data, resolution, lmax, lmax2, flux)
+        self.flux = flux
+        self.parfile = Ev_Parameter_File(self.path, self.ev_path, initial_data, resolution, lmax, lmax2, self.flux)
 
     def check_status(self):
         ev_log = [i for i in os.listdir(self.path) if i.endswith('.log')]
@@ -39,12 +40,14 @@ class Evolution():
         
         print("==> Evolution Status: ",self.status)
 
-    def write_bashfile(self, flux, bashname = 'run_bam.sh', cluster='ARA'):
+    def write_bashfile(self, bashname = 'run_bam.sh', cluster='ARA'):
         if cluster == 'ARA':
             partition = 'b_standard'
+            time = '8-0:00:00'
             modules = ['mpi/openmpi/2.1.3-gcc-7.3.0','libs/fftw/3.3.7-gcc-7.3.0','apps/mathematica/12.0','mpi/intel/2019-Update3','compiler/intel/2019-Update3']
         elif cluster == 'DRACO':
             partition = 'standard'
+            time = '3-0:00:00'
             modules = ['icc/latest','mkl/latest','compiler/gcc/10.2.1','mpi/openmpi/4.1.1']
         else:
             print('ERROR: Unknown cluster name. Currently available: ARA, DRACO.')
@@ -58,7 +61,7 @@ class Evolution():
         bss.write('#SBATCH -e error.err \n')
         bss.write('#SBATCH --nodes 2 \n')
         bss.write('#SBATCH --ntasks-per-node=4 \n')
-        bss.write('#SBATCH -t 8-8:00:00 \n')
+        bss.write('#SBATCH -t '+time+' \n')
         bss.write('#SBATCH --mail-user=alejandra.gonzalez@uni-jena.de \n')
         bss.write('#SBATCH --mail-type=begin \n')
         bss.write('#SBATCH --mail-type=end \n')
@@ -76,7 +79,7 @@ class Evolution():
             else:
                 bss.write('module load '+mod+' \n')
                 
-        if flux=='EFL':
+        if self.flux=='EFL':
             exe_file = os.path.join(self.ev_path,'exe/bam_wEFL')
         else:
             exe_file = os.path.join(self.ev_path,'exe/bam_noEFL')
