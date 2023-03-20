@@ -243,8 +243,8 @@ class Ev_Parameter_File():
 
         # ID_HEADER
         self.id_header['EIDdataReader_exe'] = initial_data.id_exe
-        self.id_header['EIDdataReader_datadir'] = initial_data.ou.hr_path
-        eos = initial_data.parfile.pardic['NS_EoS_description']
+        self.id_header['EIDdataReader_datadir'] = os.path.join(initial_data.ou.outpath,initial_data.ou.hr_path)
+        eos = initial_data.parfile.pardic['NS_EoS_description'][-3:]
         try:
             self.id_header['eos_tab_file'] = os.path.join(eos_tab_path,'eos_'+eos.lower()+'.pwp')
         except:
@@ -280,7 +280,8 @@ class Ev_Parameter_File():
         # Make parfile
         self.make_parfile()
         # ID_HEADER, HYDRO, EVOLUTION, OUTPUT, BOUNDARY_AND_GAUGE, AHMOD, INVARIANTS, HYDROANALYSIS, ADM_MASS
-        EV_PARDIC = self.id_header + self.grid_setup + self.hydro + self.evolution + self.output + self.boundary_and_gauge + self.ahmod + self.invariants + self.hydroanalysis + self.adm_mass
+        EV_PARDIC = {**self.id_header, **self.grid_setup, **self.hydro, **self.evolution, **self.output, **self.boundary_and_gauge, **self.ahmod, **self.invariants, **self.hydroanalysis, **self.adm_mass}
+        #EV_PARDIC = self.id_header + self.grid_setup + self.hydro + self.evolution + self.output + self.boundary_and_gauge + self.ahmod + self.invariants + self.hydroanalysis + self.adm_mass
 
         return EV_PARDIC
 
@@ -411,30 +412,30 @@ class Ev_Parameter_File():
     def make_parfile(self):
         # Write par file
         with open(os.path.join(self.path,'bam_evo.par'), 'w') as f:
-            f.write("\n############################################################################# \n # ID_HEADER \n")
+            f.write("\n############################################################################# \n# ID_HEADER \n")
             for key, value in self.id_header.items():
                 f.write('%s =   %s\n' % (key, value))
-            f.write("\n############################################################################# \n # HYDRO \n")
+            f.write("\n############################################################################# \n# HYDRO \n")
             for key, value in self.hydro.items():
                 f.write('%s =   %s\n' % (key, value))
-            f.write("\n############################################################################# \n # EVOLUTION \n")
+            f.write("\n############################################################################# \n# EVOLUTION \n")
             for key, value in self.evolution.items():
                 f.write('%s =   %s\n' % (key, value))
-            f.write("\n############################################################################# \n # OUTPUT \n")
+            f.write("\n############################################################################# \n# OUTPUT \n")
             for key, value in self.output.items():
                 f.write('%s =   %s\n' % (key, value))
-            f.write("\n############################################################################# \n # BOUNDARY_AND_GAUGE \n")
+            f.write("\n############################################################################# \n# BOUNDARY_AND_GAUGE \n")
             for key, value in self.boundary_and_gauge.items():
                 f.write('%s =   %s\n' % (key, value))
-            f.write("\n############################################################################# \n # AHMOD \n")
+            f.write("\n############################################################################# \n# AHMOD \n")
             for key, value in self.ahmod.items():
                 f.write('%s =   %s\n' % (key, value))
-            f.write("\n############################################################################# \n # INVARIANTS \n")
+            f.write("\n############################################################################# \n# INVARIANTS \n")
             for key, value in self.invariants.items():
                 f.write('%s =   %s\n' % (key, value))
-            f.write("\n############################################################################# \n # HYDROANALYSIS \n")
+            f.write("\n############################################################################# \n# HYDROANALYSIS \n")
             for key, value in self.hydroanalysis.items():
                 f.write('%s =   %s\n' % (key, value))
-            f.write("\n############################################################################# \n # ADM_MASS \n")
+            f.write("\n############################################################################# \n# ADM_MASS \n")
             for key, value in self.adm_mass.items():
                 f.write('%s =   %s\n' % (key, value))
