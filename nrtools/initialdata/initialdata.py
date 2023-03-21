@@ -119,8 +119,8 @@ class Initial_Data():
         # Print status
         print("==> Checking Accuracy: \n")
         print("~ BH_irreducible_mass: expected: ", bhmass_expected, "| current: ", bhmass_current,"| Error= ",bhmass_error,"(",bhmass_error*100/bhmass_expected,"%) \n")
-        print("~ BH_chi_z: expected: ", bhchiz_expected, "| current: ", bhmass_current,"| Error= ",bhchiz_error,"(",bhchiz_error*100/bhchiz_expected,"%) \n")
-        print("~ NS_baryonic_mass: expected: ", nsmass_expected, "| current: ", bhmass_current,"| Error= ",nsmass_error,"(",nsmass_error*100/nsmass_expected,"%)\n")
+        print("~ BH_chi_z: expected: ", bhchiz_expected, "| current: ", bhchiz_current,"| Error= ",bhchiz_error,"(",bhchiz_error*100/bhchiz_expected,"%) \n")
+        print("~ NS_baryonic_mass: expected: ", nsmass_expected, "| current: ", nsmass_current,"| Error= ",nsmass_error,"(",nsmass_error*100/nsmass_expected,"%)\n")
         return bhmass_error, bhchiz_error, nsmass_error
 
     def check_convergence(self, patch = 'right_BH_around_front'):
