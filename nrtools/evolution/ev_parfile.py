@@ -416,6 +416,9 @@ class Ev_Parameter_File():
             f.write("\n############################################################################# \n# ID_HEADER \n")
             for key, value in self.id_header.items():
                 f.write('%s =   %s\n' % (key, value))
+            f.write("\n############################################################################# \n# GRID_SETUP \n")
+            for key, value in self.grid_setup.items():
+                f.write('%s =   %s\n' % (key, value))    
             f.write("\n############################################################################# \n# HYDRO \n")
             for key, value in self.hydro.items():
                 f.write('%s =   %s\n' % (key, value))
