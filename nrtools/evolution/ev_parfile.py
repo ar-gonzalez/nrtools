@@ -357,6 +357,7 @@ class Ev_Parameter_File():
         #grid_params['invariants_energy_r'] = radii
         #grid_params['ADM_mass_r'] = radii
         if verbose:
+            print("\n==> Grid setup:")
             print("dxyz           = {} # NS_diameter*(1.15))/(amr_move_nxyz)*(2**amr_lmax2)".format((grid_params['dxyz'])))
             print("amr_bo_dxmax   = {} # (2.4/amr_move_nxyz)*64 ".format((grid_params['amr_bo_dxmax'])))
             print("z4_shiftdriver = {} # 2.0/(BH_m+NS_m)".format((grid_params['z4_shiftdriver'])))
@@ -367,7 +368,7 @@ class Ev_Parameter_File():
             print("Invariants_output_time = {} # 2douttime".format((grid_params['douttime2'])))
             print("extraction radii = {}".format(radii))
 
-            print("\n\n## Configs:")
+            print("\n## Configs:")
 
             ## calculate moving boxes consistency:
             ## the size of the smallest non moving level (box)
