@@ -286,7 +286,8 @@ class Ev_Parameter_File():
         return EV_PARDIC
 
 
-    def get_grid_params(self, initial_data, resolution, lmax, lmax2, flux, verbose=True):
+    def get_grid_params(self, initial_data, resolution, lmax, lmax2, flux, save=True):
+        print('==> Setting up grid parameters for parfile ..')
         grid_params = {}
         grid_params['amr_move_nxyz'] = resolution
         grid_params['nxyz'] = 2*grid_params['amr_move_nxyz']
@@ -356,19 +357,20 @@ class Ev_Parameter_File():
         #grid_params['invariants_modes_r'] = radii
         #grid_params['invariants_energy_r'] = radii
         #grid_params['ADM_mass_r'] = radii
-        if verbose:
-            print("\n==> Grid setup:")
-            print("dxyz           = {} # NS_diameter*(1.15))/(amr_move_nxyz)*(2**amr_lmax2)".format((grid_params['dxyz'])))
-            print("amr_bo_dxmax   = {} # (2.4/amr_move_nxyz)*64 ".format((grid_params['amr_bo_dxmax'])))
-            print("z4_shiftdriver = {} # 2.0/(BH_m+NS_m)".format((grid_params['z4_shiftdriver'])))
-            print("0douttime    = {} # dxyz/(2**(amr_lmax)) * 2**int(amr_lmax/3)/dtfac".format((grid_params['douttime0'])))
-            print("1douttime    = {} # dxyz/(2**(amr_lmax)) * 2**int(amr_lmax/3)/dtfac".format((grid_params['douttime1'])))
-            print("2douttime    = {} # dxyz/(2**(amr_lmax)) * 2**int(amr_lmax/3)/dtfac*4".format((grid_params['douttime2'])))
-            print("AHmod_time   = {} # 2douttime".format((grid_params['douttime2'])))
-            print("Invariants_output_time = {} # 2douttime".format((grid_params['douttime2'])))
-            print("extraction radii = {}".format(radii))
+        if save:
+            file = open(os.path.join(self.path,'grid_setup.log'), 'a')
+            file.write("==> Grid setup:")
+            file.write("dxyz           = {} # NS_diameter*(1.15))/(amr_move_nxyz)*(2**amr_lmax2)".format((grid_params['dxyz'])))
+            file.write("amr_bo_dxmax   = {} # (2.4/amr_move_nxyz)*64 ".format((grid_params['amr_bo_dxmax'])))
+            file.write("z4_shiftdriver = {} # 2.0/(BH_m+NS_m)".format((grid_params['z4_shiftdriver'])))
+            file.write("0douttime    = {} # dxyz/(2**(amr_lmax)) * 2**int(amr_lmax/3)/dtfac".format((grid_params['douttime0'])))
+            file.write("1douttime    = {} # dxyz/(2**(amr_lmax)) * 2**int(amr_lmax/3)/dtfac".format((grid_params['douttime1'])))
+            file.write("2douttime    = {} # dxyz/(2**(amr_lmax)) * 2**int(amr_lmax/3)/dtfac*4".format((grid_params['douttime2'])))
+            file.write("AHmod_time   = {} # 2douttime".format((grid_params['douttime2'])))
+            file.write("Invariants_output_time = {} # 2douttime".format((grid_params['douttime2'])))
+            file.write("extraction radii = {}".format(radii))
 
-            print("\n## Configs:")
+            file.write("\n## Configs:")
 
             ## calculate moving boxes consistency:
             ## the size of the smallest non moving level (box)
@@ -378,35 +380,37 @@ class Ev_Parameter_File():
 
             ## 2*big_move_box, coeffs 2 in order to account for buffers
             if (small_non_move_box - (2*big_move_box + init_s) > 0):
-                print("# MOVING BOXES ARE OK.")
+                file.write("# MOVING BOXES ARE OK.")
             else:
-                print("# WARNING: MOVING BOXES DO NOT FIT INTO FIXED LEVEL!")
+                file.write("# WARNING: MOVING BOXES DO NOT FIT INTO FIXED LEVEL!")
 
-            print("# BHNS separation = {}".format(init_s))
-            print("# dxyz_finest_NS  = {} # dxyz in finest level around the NS after roundoff".format(dxyz_fine))
-            print("# dxyz_finest_BH  = {} # dxyz in finest level around the BH after roundoff".format(dxyz_fine/2**(grid_params['amr_lmax']-grid_params['amr_lmax2'])))
-            print("# BH_m = {}".format(BH_m))
-            print("# NS_m = {}".format(NS_m))
-            print("# BH_diameter = {}".format(BH_d))
-            print("# NS_diameter = {}".format(NS_d))
-            print("# NS_finest_box_len = {}".format(NS_box_len))
-            print("# BH_finest_box_len = {}".format(BH_box_len))
+            file.write("# BHNS separation = {}".format(init_s))
+            file.write("# dxyz_finest_NS  = {} # dxyz in finest level around the NS after roundoff".format(dxyz_fine))
+            file.write("# dxyz_finest_BH  = {} # dxyz in finest level around the BH after roundoff".format(dxyz_fine/2**(grid_params['amr_lmax']-grid_params['amr_lmax2'])))
+            file.write("# BH_m = {}".format(BH_m))
+            file.write("# NS_m = {}".format(NS_m))
+            file.write("# BH_diameter = {}".format(BH_d))
+            file.write("# NS_diameter = {}".format(NS_d))
+            file.write("# NS_finest_box_len = {}".format(NS_box_len))
+            file.write("# BH_finest_box_len = {}".format(BH_box_len))
             if (grid_params['amr_lmax'] - grid_params['amr_move_lcube'] > 1):
-                print("# BH_next_finest_box_len = {} > {} ???"
+                file.write("# BH_next_finest_box_len = {} > {} ???"
                         " should BH_next_finest_box_len > (1.25)*BH_diameter".
                         format(BH_box_len2,(1.25)*BH_d))
 
-                print("# BH_m/h_min|finest     = {} > 20 ??? "
+                file.write("# BH_m/h_min|finest     = {} > 20 ??? "
                     " see https://arxiv.org/pdf/1007.4789.pdf ".
                     format(BH_m/(grid_params['dxyz']/2**grid_params['amr_lmax'])))
 
-                print("# BH_m/h_min|2nd_finest = {} > 20 ??? "
+                file.write("# BH_m/h_min|2nd_finest = {} > 20 ??? "
                     " see https://arxiv.org/pdf/1007.4789.pdf ".
                     format(BH_m/(grid_params['dxyz']/2**(grid_params['amr_lmax']-1))))
                     
-                print("# outer boundary radius ~ {} > {} ???"
+                file.write("# outer boundary radius ~ {} > {} ???"
                     " should dxyz*nxyz/2 > 5*init_separation".
                     format(grid_params['dxyz'] * grid_params['nxyz']/2,5*init_s))
+                
+            file.close()
     
         return grid_params
                 
