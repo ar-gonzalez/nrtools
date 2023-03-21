@@ -267,7 +267,7 @@ class Ev_Parameter_File():
             self.hydro['hrsc_rec_HO'] = 'WENOoptimal'
             self.hydro['hrsc_rec_metric'] = 'LAG4'
             self.hydro['hrsc_flux']  = 'HOEV2'
-            self.hydro = self.hydro + ENTROPY_VISCOSITY
+            self.hydro = {**self.hydro, **self.entropy_viscosity}
         
         # EVOLUTION
         self.evolution['z4_shiftdriver'] = grid_params['z4_shiftdriver']
