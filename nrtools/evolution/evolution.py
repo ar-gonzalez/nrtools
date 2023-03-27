@@ -1,5 +1,6 @@
 import os
 from .ev_parfile import *
+from .ev_output import *
 
 ########################################
 # Main class for Initial Data
@@ -24,6 +25,7 @@ class Evolution():
         self.check_status()
         self.flux = flux
         self.parfile = Ev_Parameter_File(self.path, self.ev_path, initial_data, resolution, lmax, lmax2, self.flux)
+        self.ou = Ev_Output(self.path, self.status, lmax)
 
     def check_status(self):
         ev_log = [i for i in os.listdir(self.path) if i.endswith('.log')]
