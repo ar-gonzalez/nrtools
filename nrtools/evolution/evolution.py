@@ -2,6 +2,13 @@ import os
 from .ev_parfile import *
 from .ev_output import *
 
+def ev_folder_parser(folder_name):
+    pars = folder_name.split('_')
+    resolution = pars[1]
+    lmax = pars[2]
+    flux = pars[3]
+    return resolution, lmax, flux
+
 ########################################
 # Main class for Initial Data
 ########################################
