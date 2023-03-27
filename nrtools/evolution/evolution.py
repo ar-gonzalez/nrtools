@@ -90,5 +90,6 @@ class Evolution():
         bss.close()
 
     def run_job(self):
+        os.chdir(self.path)
         submitjob = 'sbatch ' + os.path.join(self.path,self.bashname)
         os.system(submitjob)
