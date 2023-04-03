@@ -1,4 +1,6 @@
 import os
+import matplotlib.pyplot as plt
+import numpy as np
 
 ########################################
 # EV Output class
@@ -17,12 +19,12 @@ class Ev_Output():
     status  : status of the ievolution run
     lmax    : refinement levels for obj1
     """
-    def __init__(self, simname, path, status, lmax):
+    def __init__(self, path, status, lmax):
         if status=='Not started':
             print('===> Error: Evolution has not started yet')
         else:
             folder_name = [i for i in os.listdir(path) if os.isdir(os.path.join(path,i)) and i.startswith('bam')][0]
-            self.outpath = os.path.join(path,folder_name)
+            self.outpath = os.path.join(path,folder_name) # where the sim output is 
             self.lmax = lmax
 
             # Output directories:
@@ -33,7 +35,7 @@ class Ev_Output():
             
 
     def plot_moving_puncture(self):
-        mp_file = [i for i in os.listdir(output_path) if i.startswith('moving_puncture_distance.lxyz')][0]
+        mp_file = [i for i in os.listdir(self.outpath) if i.startswith('moving_puncture_distance.lxyz')][0]
         self.mp_path = os.path.join(self.outpath,mp_file)
 
         px_ns, py_ns, px_bh, py_bh = np.loadtxt(fname=self.mp_path, comments='"', usecols=(0,1,3,4), unpack=True)
@@ -85,7 +87,7 @@ class Ev_Output():
                 plt.show()
 
         else:
-           fig = plt.figure()
+            fig = plt.figure()
             plt.title(var)
             for lvl in range(lmax+1):
                 var0file = os.path.join(self.out_0d_dir, var + '_norm.l' + str(lvl))
