@@ -359,18 +359,18 @@ class Ev_Parameter_File():
         #grid_params['ADM_mass_r'] = radii
         if save:
             file = open(os.path.join(self.path,'grid_setup.log'), 'a')
-            file.write("==> Grid setup:")
-            file.write("dxyz           = {} # NS_diameter*(1.15))/(amr_move_nxyz)*(2**amr_lmax2)".format((grid_params['dxyz'])))
-            file.write("amr_bo_dxmax   = {} # (2.4/amr_move_nxyz)*64 ".format((grid_params['amr_bo_dxmax'])))
-            file.write("z4_shiftdriver = {} # 2.0/(BH_m+NS_m)".format((grid_params['z4_shiftdriver'])))
-            file.write("0douttime    = {} # dxyz/(2**(amr_lmax)) * 2**int(amr_lmax/3)/dtfac".format((grid_params['douttime0'])))
-            file.write("1douttime    = {} # dxyz/(2**(amr_lmax)) * 2**int(amr_lmax/3)/dtfac".format((grid_params['douttime1'])))
-            file.write("2douttime    = {} # dxyz/(2**(amr_lmax)) * 2**int(amr_lmax/3)/dtfac*4".format((grid_params['douttime2'])))
-            file.write("AHmod_time   = {} # 2douttime".format((grid_params['douttime2'])))
-            file.write("Invariants_output_time = {} # 2douttime".format((grid_params['douttime2'])))
-            file.write("extraction radii = {}".format(radii))
+            file.write("==> Grid setup: \n")
+            file.write("dxyz           = {} # NS_diameter*(1.15))/(amr_move_nxyz)*(2**amr_lmax2) \n".format((grid_params['dxyz'])))
+            file.write("amr_bo_dxmax   = {} # (2.4/amr_move_nxyz)*64  \n".format((grid_params['amr_bo_dxmax'])))
+            file.write("z4_shiftdriver = {} # 2.0/(BH_m+NS_m) \n".format((grid_params['z4_shiftdriver'])))
+            file.write("0douttime    = {} # dxyz/(2**(amr_lmax)) * 2**int(amr_lmax/3)/dtfac \n".format((grid_params['douttime0'])))
+            file.write("1douttime    = {} # dxyz/(2**(amr_lmax)) * 2**int(amr_lmax/3)/dtfac \n".format((grid_params['douttime1'])))
+            file.write("2douttime    = {} # dxyz/(2**(amr_lmax)) * 2**int(amr_lmax/3)/dtfac*4 \n".format((grid_params['douttime2'])))
+            file.write("AHmod_time   = {} # 2douttime \n".format((grid_params['douttime2'])))
+            file.write("Invariants_output_time = {} # 2douttime \n".format((grid_params['douttime2'])))
+            file.write("extraction radii = {} ".format(radii))
 
-            file.write("\n## Configs:")
+            file.write("\n\n## Configs: \n")
 
             ## calculate moving boxes consistency:
             ## the size of the smallest non moving level (box)
@@ -380,34 +380,34 @@ class Ev_Parameter_File():
 
             ## 2*big_move_box, coeffs 2 in order to account for buffers
             if (small_non_move_box - (2*big_move_box + init_s) > 0):
-                file.write("# MOVING BOXES ARE OK.")
+                file.write("# MOVING BOXES ARE OK. \n")
             else:
-                file.write("# WARNING: MOVING BOXES DO NOT FIT INTO FIXED LEVEL!")
+                file.write("# WARNING: MOVING BOXES DO NOT FIT INTO FIXED LEVEL! \n")
 
-            file.write("# BHNS separation = {}".format(init_s))
-            file.write("# dxyz_finest_NS  = {} # dxyz in finest level around the NS after roundoff".format(dxyz_fine))
-            file.write("# dxyz_finest_BH  = {} # dxyz in finest level around the BH after roundoff".format(dxyz_fine/2**(grid_params['amr_lmax']-grid_params['amr_lmax2'])))
-            file.write("# BH_m = {}".format(BH_m))
-            file.write("# NS_m = {}".format(NS_m))
-            file.write("# BH_diameter = {}".format(BH_d))
-            file.write("# NS_diameter = {}".format(NS_d))
-            file.write("# NS_finest_box_len = {}".format(NS_box_len))
-            file.write("# BH_finest_box_len = {}".format(BH_box_len))
+            file.write("# BHNS separation = {} \n".format(init_s))
+            file.write("# dxyz_finest_NS  = {} # dxyz in finest level around the NS after roundoff \n".format(dxyz_fine))
+            file.write("# dxyz_finest_BH  = {} # dxyz in finest level around the BH after roundoff \n".format(dxyz_fine/2**(grid_params['amr_lmax']-grid_params['amr_lmax2'])))
+            file.write("# BH_m = {} \n".format(BH_m))
+            file.write("# NS_m = {} \n".format(NS_m))
+            file.write("# BH_diameter = {} \n".format(BH_d))
+            file.write("# NS_diameter = {} \n".format(NS_d))
+            file.write("# NS_finest_box_len = {} \n".format(NS_box_len))
+            file.write("# BH_finest_box_len = {} \n".format(BH_box_len))
             if (grid_params['amr_lmax'] - grid_params['amr_move_lcube'] > 1):
                 file.write("# BH_next_finest_box_len = {} > {} ???"
-                        " should BH_next_finest_box_len > (1.25)*BH_diameter".
+                        " should BH_next_finest_box_len > (1.25)*BH_diameter \n".
                         format(BH_box_len2,(1.25)*BH_d))
 
                 file.write("# BH_m/h_min|finest     = {} > 20 ??? "
-                    " see https://arxiv.org/pdf/1007.4789.pdf ".
+                    " see https://arxiv.org/pdf/1007.4789.pdf  \n".
                     format(BH_m/(grid_params['dxyz']/2**grid_params['amr_lmax'])))
 
                 file.write("# BH_m/h_min|2nd_finest = {} > 20 ??? "
-                    " see https://arxiv.org/pdf/1007.4789.pdf ".
+                    " see https://arxiv.org/pdf/1007.4789.pdf  \n".
                     format(BH_m/(grid_params['dxyz']/2**(grid_params['amr_lmax']-1))))
                     
                 file.write("# outer boundary radius ~ {} > {} ???"
-                    " should dxyz*nxyz/2 > 5*init_separation".
+                    " should dxyz*nxyz/2 > 5*init_separation \n".
                     format(grid_params['dxyz'] * grid_params['nxyz']/2,5*init_s))
                 
             file.close()
