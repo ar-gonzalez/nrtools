@@ -218,7 +218,7 @@ class Ev_Parameter_File():
                     else:
                         if '#' in line: # to remove comments
                             keyval = line.strip().split('#')[0]
-                            key, value = keyval.split(' = ')
+                            key, value = keyval.split('=')
                         else:
                             key, value = line.strip().split(' = ')
                         EV_PARDICR[key] = value
