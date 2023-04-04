@@ -216,8 +216,13 @@ class Ev_Parameter_File():
                     if len(line.strip())==0 or line.strip().startswith('#'):
                         continue
                     else:
-                        key, value = line.strip().split(' = ')
+                        if '#' in line: # to remove comments
+                            keyval = line.strip().split('#')[0]
+                            key, value = keyval.split(' = ')
+                        else:
+                            key, value = line.strip().split(' = ')
                         EV_PARDICR[key] = value
+
             self.pardic = EV_PARDICR
         else: 
             self.id_header = ID_HEADER

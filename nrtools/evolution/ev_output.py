@@ -67,56 +67,59 @@ class Ev_Output():
         except FileExistsError:
             print('Directory exists: ',plots_0d)
 
-        lmax = self.lmax
-        if var=='all':
-            paras = [i for i in os.listdir(self.outpath) if i.endswith('.par')]
-            params_file = os.path.join(self.outpath, paras[0])
-            params = {}
-            with open(params_file) as file:
-                for i,line in enumerate(file):
-                    if line.strip().startswith('#') or len(line.strip()) == 0:
-                        continue
-                    else:
-                        try:
-                            k, v = line.strip().split('=')
-                        except:
-                            k, v = line.strip().split('=',1) # Split on the first occurrence of '='
-                            v = v.split('#', 1)[0].strip() # Remove any comments starting with '#'
-
-                        if k.strip()=='0doutput':
-                            try:
-                                v = v.split('#', 1)[0].strip()
-                            except:
-                                continue
-                            params[k.strip()] = v.strip()
-                        else:
+        if len(os.listdir(self.out_0d_dir))==0:
+            print('===> Error: No output produced yet')
+        else:
+            lmax = self.lmax
+            if var=='all':
+                paras = [i for i in os.listdir(self.outpath) if i.endswith('.par')]
+                params_file = os.path.join(self.outpath, paras[0])
+                params = {}
+                with open(params_file) as file:
+                    for i,line in enumerate(file):
+                        if line.strip().startswith('#') or len(line.strip()) == 0:
                             continue
-            out0 = params['0doutput'].split() # variables in 0d output
-            for var in out0:
+                        else:
+                            try:
+                                k, v = line.strip().split('=')
+                            except:
+                                k, v = line.strip().split('=',1) # Split on the first occurrence of '='
+                                v = v.split('#', 1)[0].strip() # Remove any comments starting with '#'
+
+                            if k.strip()=='0doutput':
+                                try:
+                                    v = v.split('#', 1)[0].strip()
+                                except:
+                                    continue
+                                params[k.strip()] = v.strip()
+                            else:
+                                continue
+                out0 = params['0doutput'].split() # variables in 0d output
+                for var in out0:
+                    fig = plt.figure()
+                    plt.title(var)
+                    for lvl in range(lmax+1):
+                        try:
+                            var0file = os.path.join(self.out_0d_dir, var + '_norm.l' + str(lvl))
+                            t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
+                        except OSError:
+                            var0file = os.path.join(self.out_0d_dir, var + '_norm.l' + str(lvl) + 'a')
+                            t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
+                        plt.plot(t0,v0,label=str(lvl))
+                    plt.legend()
+                    plt.savefig(os.path.join(plots_0d,var+'.pdf'))
+                    plt.show()
+
+            else:
                 fig = plt.figure()
                 plt.title(var)
                 for lvl in range(lmax+1):
-                    try:
-                        var0file = os.path.join(self.out_0d_dir, var + '_norm.l' + str(lvl))
-                        t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
-                    except OSError:
-                        var0file = os.path.join(self.out_0d_dir, var + '_norm.l' + str(lvl) + 'a')
-                        t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
+                    var0file = os.path.join(self.out_0d_dir, var + '_norm.l' + str(lvl))
+                    t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
                     plt.plot(t0,v0,label=str(lvl))
                 plt.legend()
                 plt.savefig(os.path.join(plots_0d,var+'.pdf'))
-                plt.show()
-
-        else:
-            fig = plt.figure()
-            plt.title(var)
-            for lvl in range(lmax+1):
-                var0file = os.path.join(self.out_0d_dir, var + '_norm.l' + str(lvl))
-                t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
-                plt.plot(t0,v0,label=str(lvl))
-            plt.legend()
-            plt.savefig(os.path.join(plots_0d,var+'.pdf'))
-            plt.show() 
+                plt.show() 
 
 
 
