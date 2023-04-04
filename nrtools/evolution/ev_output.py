@@ -23,8 +23,14 @@ class Ev_Output():
         if status=='Not started':
             print('===> Error: Evolution has not started yet')
         else:
-            folder_name = [i for i in os.listdir(path) if os.isdir(os.path.join(path,i)) and i.startswith('bam')][0]
-            self.outpath = os.path.join(path,folder_name) # where the sim output is 
+            folder_name = [i for i in os.listdir(path) if os.path.isdir(os.path.join(path,i)) and i.startswith('bam')][0]
+            self.outpath = os.path.join(path,folder_name) # where the sim output is
+            self.plotsdir = os.path.join(path,'plots')
+            try:
+                os.mkdir(self.plotsdir)
+            except FileExistsError:
+                print('Directory exists: ',self.plotsdir)
+
             self.lmax = lmax
 
             # Output directories:
@@ -35,26 +41,36 @@ class Ev_Output():
             
 
     def plot_moving_puncture(self):
-        mp_file = [i for i in os.listdir(self.outpath) if i.startswith('moving_puncture_distance.lxyz')][0]
-        self.mp_path = os.path.join(self.outpath,mp_file)
+        try:
+            mp_file = [i for i in os.listdir(self.outpath) if i.startswith('moving_puncture_distance.lxyz')][0]
+            self.mp_path = os.path.join(self.outpath,mp_file)
 
-        px_ns, py_ns, px_bh, py_bh = np.loadtxt(fname=self.mp_path, comments='"', usecols=(0,1,3,4), unpack=True)
+            px_ns, py_ns, px_bh, py_bh = np.loadtxt(fname=self.mp_path, comments='"', usecols=(0,1,3,4), unpack=True)
 
-        plt.plot(px_ns,py_ns,color='#7fbf7b',label="NS")
-        plt.plot(px_bh,py_bh,color='#af8dc3',label="BH")
-        plt.grid()
-        plt.legend()
-        plt.show()
+            plt.scatter(px_ns,py_ns,color='#7fbf7b',label="NS",marker='.')
+            plt.scatter(px_bh,py_bh,color='#af8dc3',label="BH",marker='.')
+            plt.grid()
+            plt.legend()
+            plt.savefig(os.path.join(self.plotsdir,'moving_punctures.pdf'))
+            plt.show()
+        except IndexError:
+            print("===> Error: Time integration hasn't started yet")
 
     def plot_0d_output(self, var='all', save='False'):
         '''
         Input: either all variables available or a specific one, save plot or not
         Returns: plot of the variable
         '''
+        plots_0d = os.path.join(self.plotsdir,'0d_plots')
+        try:
+            os.mkdir(plots_0d)
+        except FileExistsError:
+            print('Directory exists: ',plots_0d)
+
         lmax = self.lmax
         if var=='all':
-            paras = [i for i in os.listdir(inputdir) if i.endswith('.par')]
-            params_file = inputdir + '/' + paras[0]
+            paras = [i for i in os.listdir(self.outpath) if i.endswith('.par')]
+            params_file = os.path.join(self.outpath, paras[0])
             params = {}
             with open(params_file) as file:
                 for i,line in enumerate(file):
@@ -80,10 +96,15 @@ class Ev_Output():
                 fig = plt.figure()
                 plt.title(var)
                 for lvl in range(lmax+1):
-                    var0file = os.path.join(self.out_0d_dir, var + '_norm.l' + str(lvl))
-                    t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
+                    try:
+                        var0file = os.path.join(self.out_0d_dir, var + '_norm.l' + str(lvl))
+                        t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
+                    except OSError:
+                        var0file = os.path.join(self.out_0d_dir, var + '_norm.l' + str(lvl) + 'a')
+                        t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
                     plt.plot(t0,v0,label=str(lvl))
                 plt.legend()
+                plt.savefig(os.path.join(plots_0d,var+'.pdf'))
                 plt.show()
 
         else:
@@ -94,6 +115,7 @@ class Ev_Output():
                 t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
                 plt.plot(t0,v0,label=str(lvl))
             plt.legend()
+            plt.savefig(os.path.join(plots_0d,var+'.pdf'))
             plt.show() 
 
 
