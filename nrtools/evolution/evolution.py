@@ -90,10 +90,11 @@ class Evolution():
             else:
                 bss.write('module load '+mod+' \n')
                 
-        if self.flux=='EFL':
-            exe_file = os.path.join(self.ev_path,'exe/bam_wEFL')
-        else:
-            exe_file = os.path.join(self.ev_path,'exe/bam_noEFL')
+        #if self.flux=='EFL':
+        #    exe_file = os.path.join(self.ev_path,'exe/bam_wEFL')
+        #else:
+        #    exe_file = os.path.join(self.ev_path,'exe/bam_noEFL')
+        exe_file = os.path.join(self.ev_path,'exe/bam_merged')
 
         bss.write('time mpirun -n 16 '+exe_file+' -nt 6 bam_evo.par \n')
         bss.close()

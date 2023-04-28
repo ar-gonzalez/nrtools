@@ -284,6 +284,10 @@ class Ev_Parameter_File():
         # OTHERS
         self.ahmod['AHmod_time'] = self.output['2douttime']
         self.invariants['Invariants_output_time'] = self.output['2douttime']
+        self.invariants['invariants_modes_r'] = grid_params['invariants_modes_r']#self.invariants['invariants_modes_r']+" "+grid_params['invariants_modes_r']
+        self.invariants['invariants_energy_r'] = grid_params['invariants_energy_r']#self.invariants['invariants_energy_r']+" "+grid_params['invariants_energy_r']
+        self.adm_mass['ADM_mass_r'] = grid_params['ADM_mass_r']#self.adm_mass['ADM_mass_r']+" "+grid_params['ADM_mass_r']
+
 
         # Make parfile
         self.make_parfile()
