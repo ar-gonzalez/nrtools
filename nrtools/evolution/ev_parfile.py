@@ -50,6 +50,7 @@ HYDRO = {
     # hydro
     'hrsc_nghosts'                : '4',
     'hrsc_rec'                    : 'WENOZ',
+    'hrsc_rec_HO'                 : 'WENOoptimal',
     'hrsc_TVD_limiter'            : 'MC2',
     'hrsc_rec_metric'             : '@@',
     'hrsc_flux'                   : '@@',
@@ -61,7 +62,7 @@ HYDRO = {
     'grhd_use_atmosphere'         : 'yes',
     'grhd_use_atmosphere'         : 'ColdStatic',
     'grhd_atm_factor'             : '100',
-    'grhd_atm_level'              : '1e-12',
+    'grhd_atm_level'              : '1e-10',
     'grhd_use_atmosphere_mask'    : 'yes',
     'grhd_use_atmosphere_prerhs'  : 'yes',
     'grhd_use_atmosphere_postrhs' : 'no',
@@ -74,8 +75,8 @@ HYDRO = {
     
 ENTROPY_VISCOSITY = {
     # entropy-viscosity
-    'cE'                           : '1',
-    'cmax'                         : '1',
+    'grhd_visc_method_cE'          : '1',
+    'grhd_visc_method_cmax'        : '1',
     'grhd_visc_method'             : 'phys',
     'grhd_visc_compute'            : 'prestep', 
     'grhd_visc_method_on_t'        : '0',
@@ -106,13 +107,13 @@ EVOLUTION = {
 OUTPUT = {
     # output
     '0douttime'                   : '@@',
-    '0doutput'                    : 'alpha ham momx momy momz grhd_D grhd_rho hydroa_uesc hydroa_Du hydroa_Db hydroa_Dh hydroa_etot hydroa_Px hydroa_Py hydroa_Pz hydroa_Pux hydroa_Puy hydroa_Puz rpsi4 ipsi4',
+    '0doutput'                    : 'alpha ham momx momy momz betax grhd_D grhd_rho hydroa_uesc hydroa_Du hydroa_Db hydroa_Dh hydroa_etot hydroa_Px hydroa_Py hydroa_Pz hydroa_Pux hydroa_Puy hydroa_Puz rpsi4 ipsi4',
     '1douttime'                   : '@@',
     '1doutput'                    : 'alpha grhd_rho',
     '1doutinterpolate'            : 'no',
     '1doutputall'                 : 'no',
     '2douttime'                   : '@@',
-    '2doutput'                    : 'alpha bssn_chi grhd_rho ham momx momy momz grhd_D grhd_vx grhd_v2 grhd_epsl grhd_p hydroa_uesc hydroa_Du hydroa_Db hydroa_Dh hydroa_etot',
+    '2doutput'                    : 'alpha bssn_chi grhd_rho ham momx momy momz betax grhd_D grhd_vx grhd_v2 grhd_epsl grhd_p hydroa_uesc hydroa_Du hydroa_Db hydroa_Dh hydroa_etot',
     '2dformat'                    : 'vtk binary float',
     '2doutinterpolate'            : 'no',
     '2doutputr'                   : 'sphere_data'
@@ -143,7 +144,7 @@ AHMOD = {
     'AHmod_flow_iter'             : '5000',
     'AHmod_mass_tol'              : '5.0e-06',
     'AHmod_hmean_tol'             : '100.0',
-    'AHmod_time'                  : '0.5',
+    'AHmod_time'                  : '@@', #mod
     'AHmod_shrinking'             : '2.0',
     'AHmod_output'                : 'yes',
     'AHmod_output_xyt'            : 'no',
@@ -155,16 +156,16 @@ INVARIANTS = {
     'ntheta'                                  : '47',
     'nphi'                                    : '46',
     'invariants_compute_modes'                : 'yes',
-    'invariants_modes_r'                      : '300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 2000 2500',
+    'invariants_modes_r'                      : '300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 2000 2500', #mod
     'invariants_modes_lmin'                   : '0',
     'invariants_modes_lmax'                   : '4',
-    'invariants_energy_r'                     : '300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 2000 2500',
+    'invariants_energy_r'                     : '300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 2000 2500', #mod
     'gauss_codacci_mainardi'                  : 'standard',
     'invariants_order'                        : '4',
     'invariants_compute_modes_general'        : 'no',
     'mode_lmax'                               : '6',
     'invariants_modes_output'                 : 'all',
-    'Invariants_output_time'                  : '0.5'
+    'Invariants_output_time'                  : '@@' #mod
 }  
 
 HYDROANALYSIS = {
@@ -186,7 +187,7 @@ ADM_MASS = {
     'ADM_mass_npoints'          : '80',
     'ADM_mass_lmin'             : '0',
     'ADM_mass_lmax'             : '7',
-    'ADM_mass_r'                : '300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 2000 2500'
+    'ADM_mass_r'                : '300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 2000 2500' #mod
 }
 
 ########################################
@@ -269,7 +270,6 @@ class Ev_Parameter_File():
             self.hydro['hrsc_rec_metric'] = 'LAG6'
             self.hydro['hrsc_flux']  = 'LLF'
         elif flux=='EFL':
-            self.hydro['hrsc_rec_HO'] = 'WENOoptimal'
             self.hydro['hrsc_rec_metric'] = 'LAG4'
             self.hydro['hrsc_flux']  = 'HOEV2'
             self.hydro = {**self.hydro, **self.entropy_viscosity}
@@ -281,6 +281,9 @@ class Ev_Parameter_File():
         self.output['0douttime'] = grid_params['douttime0']
         self.output['1douttime'] = grid_params['douttime1']
         self.output['2douttime'] = grid_params['douttime2']
+        # OTHERS
+        self.ahmod['AHmod_time'] = self.output['2douttime']
+        self.invariants['Invariants_output_time'] = self.output['2douttime']
 
         # Make parfile
         self.make_parfile()
@@ -359,9 +362,9 @@ class Ev_Parameter_File():
             radii += "{} ".format(r)
         radii += "{} ".format(outer_r_int)
 
-        #grid_params['invariants_modes_r'] = radii
-        #grid_params['invariants_energy_r'] = radii
-        #grid_params['ADM_mass_r'] = radii
+        grid_params['invariants_modes_r'] = radii
+        grid_params['invariants_energy_r'] = radii
+        grid_params['ADM_mass_r'] = radii
         if save:
             file = open(os.path.join(self.path,'grid_setup.log'), 'a')
             file.write("==> Grid setup: \n")

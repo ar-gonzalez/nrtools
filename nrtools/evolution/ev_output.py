@@ -38,7 +38,6 @@ class Ev_Output():
             self.out_1d_dir = os.path.join(self.outpath, 'output_1d')
             self.out_2d_dir = os.path.join(self.outpath, 'output_2d')
             self.out_inv_dir = os.path.join(self.outpath, 'Invariants')
-            
 
     def plot_moving_puncture(self):
         try:
@@ -56,7 +55,7 @@ class Ev_Output():
         except IndexError:
             print("===> Error: Time integration hasn't started yet")
 
-    def plot_0d_output(self, var='all', save='False'):
+    def plot_0d_output(self, var='all'):
         '''
         Input: either all variables available or a specific one, save plot or not
         Returns: plot of the variable
@@ -105,7 +104,7 @@ class Ev_Output():
                         except OSError:
                             var0file = os.path.join(self.out_0d_dir, var + '_norm.l' + str(lvl) + 'a')
                             t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
-                        plt.plot(t0,v0,label=str(lvl))
+                        plt.scatter(t0,v0,label=str(lvl), marker='.')
                     plt.legend()
                     plt.savefig(os.path.join(plots_0d,var+'.pdf'))
                     plt.show()
@@ -116,7 +115,7 @@ class Ev_Output():
                 for lvl in range(lmax+1):
                     var0file = os.path.join(self.out_0d_dir, var + '_norm.l' + str(lvl))
                     t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
-                    plt.plot(t0,v0,label=str(lvl))
+                    plt.scatter(t0,v0,label=str(lvl),marker='.')
                 plt.legend()
                 plt.savefig(os.path.join(plots_0d,var+'.pdf'))
                 plt.show() 

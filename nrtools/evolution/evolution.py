@@ -54,12 +54,12 @@ class Evolution():
             partition = 'b_standard'
             time = '8-0:00:00'
             memcpu = 'MaxMemPerCPU'
-            modules = ['mpi/openmpi/2.1.3-gcc-7.3.0','libs/fftw/3.3.7-gcc-7.3.0','apps/mathematica/12.0','mpi/intel/2019-Update3','compiler/intel/2019-Update3']
+            modules = ['mpi/openmpi/2.1.3-gcc-7.3.0','mpi/intel/2019-Update3','compiler/intel/2019-Update3']
         elif cluster == 'DRACO':
-            partition = 'long' # compute, standard
-            time = '14-0:00:00' # inf, 3-0:00:00
+            partition = 'standard' # compute, standard
+            time = '3-0:00:00' # inf, 3-0:00:00
             memcpu = '2G'
-            modules = ['icc/latest','mkl/latest','compiler/gcc/10.2.1','mpi/openmpi/4.1.1']
+            modules = ['icc/latest','mkl/latest','mpi/openmpi/4.1.1']
         else:
             print('ERROR: Unknown cluster name. Currently available: ARA, DRACO.')
 
@@ -70,7 +70,7 @@ class Evolution():
         bss.write('#SBATCH -J '+self.evname+'\n')
         bss.write('#SBATCH -o bam_out.log \n')
         bss.write('#SBATCH -e error.err \n')
-        bss.write('#SBATCH --nodes 2 \n')
+        bss.write('#SBATCH --nodes 4 \n')
         bss.write('#SBATCH --ntasks-per-node=4 \n')
         bss.write('#SBATCH -t '+time+' \n')
         bss.write('#SBATCH --mail-user=alejandra.gonzalez@uni-jena.de \n')
@@ -95,7 +95,7 @@ class Evolution():
         else:
             exe_file = os.path.join(self.ev_path,'exe/bam_noEFL')
 
-        bss.write('time mpirun '+exe_file+' -nt 6 bam_evo.par \n')
+        bss.write('time mpirun -n 16 '+exe_file+' -nt 6 bam_evo.par \n')
         bss.close()
 
     def run_job(self):
