@@ -35,7 +35,7 @@ class Evolution():
         self.ou = Ev_Output(self.path, self.status, lmax)
 
     def check_status(self):
-        ev_log = [i for i in os.listdir(self.path) if i.endswith('.log')]
+        ev_log = [i for i in os.listdir(self.path) if i.endswith('out.log')]
         if len(ev_log)==0:
             self.status = 'Not started'
         else:
