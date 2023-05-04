@@ -60,6 +60,7 @@ class Ev_Output():
         Input: either all variables available or a specific one, save plot or not
         Returns: plot of the variable
         '''
+        norm_vars = ['alpha', 'ham', 'momx', 'momy', 'momz', 'betax', 'rpsi4','ipsi4']
         plots_0d = os.path.join(self.plotsdir,'0d_plots')
         try:
             os.mkdir(plots_0d)
@@ -95,14 +96,18 @@ class Ev_Output():
                                 continue
                 out0 = params['0doutput'].split() # variables in 0d output
                 for var in out0:
-                    fig = plt.figure()
+                    if var in norm_vars:
+                        outname = '_norm.l'
+                    else:
+                        outname = '_integral.l'
+                    #fig = plt.figure()
                     plt.title(var)
                     for lvl in range(lmax+1):
                         try:
-                            var0file = os.path.join(self.out_0d_dir, var + '_norm.l' + str(lvl))
+                            var0file = os.path.join(self.out_0d_dir, var + outname + str(lvl))
                             t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
                         except OSError:
-                            var0file = os.path.join(self.out_0d_dir, var + '_norm.l' + str(lvl) + 'a')
+                            var0file = os.path.join(self.out_0d_dir, var + outname + str(lvl) + 'a')
                             t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
                         plt.scatter(t0,v0,label=str(lvl), marker='.')
                     plt.legend()
@@ -110,10 +115,14 @@ class Ev_Output():
                     plt.show()
 
             else:
-                fig = plt.figure()
+                if var in norm_vars:
+                    outname = '_norm.l'
+                else:
+                    outname = '_integral.l'
+                #fig = plt.figure()
                 plt.title(var)
                 for lvl in range(lmax+1):
-                    var0file = os.path.join(self.out_0d_dir, var + '_norm.l' + str(lvl))
+                    var0file = os.path.join(self.out_0d_dir, var + outname + str(lvl))
                     t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
                     plt.scatter(t0,v0,label=str(lvl),marker='.')
                 plt.legend()
