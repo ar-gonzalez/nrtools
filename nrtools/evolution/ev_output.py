@@ -1,6 +1,8 @@
 import os
+import glob
 import matplotlib.pyplot as plt
 import numpy as np
+from watpy.wave.wave import *
 
 ########################################
 # EV Output class
@@ -38,6 +40,18 @@ class Ev_Output():
             self.out_1d_dir = os.path.join(self.outpath, 'output_1d')
             self.out_2d_dir = os.path.join(self.outpath, 'output_2d')
             self.out_inv_dir = os.path.join(self.outpath, 'Invariants')
+
+    def plot_horizon_area(self):
+        try:
+            hfile = os.path.join(self.outpath,'horizon_0')
+            t, ca = np.loadtxt(fname=hfile, comments='#', usecols=(0,9), unpack=True)
+            plt.scatter(t,ca,label='AH coord. area')
+            plt.grid()
+            plt.legend()
+            plt.savefig(os.path.join(self.plotsdir,'AH_coord_area.pdf'))
+            plt.show()
+        except IndexError:
+            print("===> Error: Time integration hasn't started yet")
 
     def plot_moving_puncture(self):
         try:
@@ -129,5 +143,18 @@ class Ev_Output():
                 plt.savefig(os.path.join(plots_0d,var+'.pdf'))
                 plt.show() 
 
+    def get_mp_Rpsi4(self,Mtot,f0):
+        '''
+        Get watpy multipolar wave object
+        Mtot: binary gravitational mass (initial_data output)
+        f0: initial GW frequency in geometric units (initial_data output)
+        '''
+        try:
+            fnames = [os.path.split(x)[1] for x in glob.glob('{}/{}'.format(self.out_inv_dir,'Rpsi4mode??_r??.l0'))]
+            mwave = mwaves(path = self.out_inv_dir, code = 'bam', filenames = fnames, mass = Mtot, f0 = f0, ignore_negative_m=True)
+        except IndexError:
+            mwave = None
+            print("===> Error: Time integration hasn't started yet")
+        return mwave
 
 

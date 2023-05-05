@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 ########################################
 # ID Output class
@@ -98,3 +99,19 @@ class Output():
                             value_array.append(float(v.strip()))
             file.close()
         return value_array
+    
+    def get_mtot_msun(self):
+        '''
+        Outputs the total grav mass of the binary
+        '''
+        return self.id_dic['BH_irreducible_mass_current'] + self.id_dic['NS_TOV_ADM_mass']
+    
+    def get_gw_freq(self):
+        '''
+        Gets the GW initial frequency in mass rescaled units
+        Tip: Use watpy/utils/units.py to convert frequency from
+        geometric units to SI (Herz)
+        '''
+        mtot = self.M
+        omega = self.id_dic['BHNS_angular_velocity']
+        return mtot*omega / (2*np.pi)
