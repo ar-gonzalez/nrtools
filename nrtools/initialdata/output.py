@@ -107,24 +107,29 @@ class Output():
         id_gw_frequency_Hz: Initial data: initial GW frequency (Hz)
         id_gw_frequency_Momega22: Initial data: Mass-rescaled initial GW frequency (c=G=Msun=1 units)
         '''
-        mtot = self.get_mtot_msun()
+        _, _, mtot = self.get_msun_masses()
         omega = float(self.id_dic['BHNS_angular_velocity'])
         id_gw_frequency_Hz = get_id_gw_frequency_Hz(omega)
         id_gw_frequency_Momega22 = get_id_gw_frequency_Momega22(omega, mtot)
         return id_gw_frequency_Hz, id_gw_frequency_Momega22
     
-    def get_mtot_msun(self):
+    def get_msun_masses(self):
         '''
-        Outputs the total grav mass of the binary
+        Outputs the grav mass of
+        M_BH: BH's mass
+        M_NS: NS' mass
+        Mtot: total binary mass
         For a NS with M_b = 1.6
         '''
         eos = self.id_dic['NS_EoS_description']
         if eos=='SLy':
-            Mg = 1.4199062240028333 #grav mass
+            M_NS = 1.4199062240028333 #grav mass
         elif eos=='MS1b':
-            Mg = 1.4611674103103354
+            M_NS = 1.4611674103103354
         else:
-            Mg = 0
+            M_NS = 0
             print("===> Error: EoS not recognized, please add to /nrtools/initialdata/output.py")
-        return float(self.id_dic['BH_irreducible_mass_current']) + Mg
+
+        M_BH = float(self.id_dic['BH_Christodoulou_mass_current'])
+        return M_BH, M_NS, M_BH + M_NS
     
