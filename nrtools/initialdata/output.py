@@ -132,4 +132,17 @@ class Output():
 
         M_BH = float(self.id_dic['BH_Christodoulou_mass_current'])
         return M_BH, M_NS, M_BH + M_NS
+
+    def get_ADM_qtys(self):
+        '''
+        Outputs
+        M_ADM: binary ADM mass
+        J_ADM: binary ADM angular momentum
+        '''
+        M_ADM = float(self.id_dic['BHNS_ADM_mass'])
+        jx = float(self.id_dic['BHNS_Jx_ADM'])
+        jy = float(self.id_dic['BHNS_Jy_ADM'])
+        jz = float(self.id_dic['BHNS_Jz_ADM'])
+        J_ADM = np.sqrt(jx*jx + jy*jy + jz*jz)
+        return M_ADM, J_ADM
     
