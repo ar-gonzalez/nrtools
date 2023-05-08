@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from ..utils.utils import get_id_gw_frequency_Hz, get_id_gw_frequency_Momega22
 
 ########################################
 # ID Output class
@@ -100,18 +101,30 @@ class Output():
             file.close()
         return value_array
     
+    def get_gw_freqs(self):
+        '''
+        Returns ID GW frequencies for CoRe:
+        id_gw_frequency_Hz: Initial data: initial GW frequency (Hz)
+        id_gw_frequency_Momega22: Initial data: Mass-rescaled initial GW frequency (c=G=Msun=1 units)
+        '''
+        mtot = self.get_mtot_msun()
+        omega = self.id_dic['BHNS_angular_velocity']
+        id_gw_frequency_Hz = get_id_gw_frequency_Hz(omega)
+        id_gw_frequency_Momega22 = get_id_gw_frequency_Momega22(omega, mtot)
+        return id_gw_frequency_Hz, id_gw_frequency_Momega22
+    
     def get_mtot_msun(self):
         '''
         Outputs the total grav mass of the binary
+        For a NS with M_b = 1.6
         '''
-        return self.id_dic['BH_irreducible_mass_current'] + self.id_dic['NS_TOV_ADM_mass']
+        eos = self.id_dic['NS_EoS_description']
+        if eos=='SLy':
+            Mg = 1.4199062240028333 #grav mass
+        elif eos=='MS1b':
+            Mg = 1.4611674103103354
+        else:
+            Mg = 0
+            print("===> Error: EoS not recognized, please add to /nrtools/initialdata/output.py")
+        return self.id_dic['BH_irreducible_mass_current'] + Mg
     
-    def get_gw_freq(self):
-        '''
-        Gets the GW initial frequency in mass rescaled units
-        Tip: Use watpy/utils/units.py to convert frequency from
-        geometric units to SI (Herz)
-        '''
-        mtot = self.M
-        omega = self.id_dic['BHNS_angular_velocity']
-        return mtot*omega / (2*np.pi)

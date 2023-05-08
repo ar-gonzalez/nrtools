@@ -2,7 +2,7 @@ import os
 import glob
 import matplotlib.pyplot as plt
 import numpy as np
-from watpy.wave.wave import *
+from watpy.wave.wave import mwaves
 
 ########################################
 # EV Output class
@@ -143,14 +143,15 @@ class Ev_Output():
                 plt.savefig(os.path.join(plots_0d,var+'.pdf'))
                 plt.show() 
 
-    def get_mp_Rpsi4(self,Mtot,f0):
+    def get_mp_Rpsi4(self,Mtot,Momg22):
         '''
         Get watpy multipolar wave object
         Mtot: binary gravitational mass (initial_data output)
-        f0: initial GW frequency in geometric units (initial_data output)
+        Momg22: initial GW frequency in geometric units (id_gw_frequency_Momega22)
         '''
         try:
             fnames = [os.path.split(x)[1] for x in glob.glob('{}/{}'.format(self.out_inv_dir,'Rpsi4mode??_r??.l0'))]
+            f0 = Momg22 / 2*np.pi / Mtot
             mwave = mwaves(path = self.out_inv_dir, code = 'bam', filenames = fnames, mass = Mtot, f0 = f0, ignore_negative_m=True)
         except IndexError:
             mwave = None

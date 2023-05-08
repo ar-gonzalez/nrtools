@@ -2,6 +2,9 @@ import numpy as np
 import cmath
 import math
 
+# Constants
+Msun_sec = 4.925794970773135e-06
+
 ## 3PN energy and ang. mom
 # from https://journals.aps.org/prd/pdf/10.1103/PhysRevD.65.124009
 # Eq. (3) and (4), for spins add Eq. (13)
@@ -28,6 +31,15 @@ def j_3pn(mo,q):
     return nu*pow(mo,-1/3)*(term1+term2+term3)
 
 ## Misc
+def get_id_gw_frequency_Hz(omega):
+    # omega : orbital angular velocity from ID
+    return omega / (math.pi * Msun_sec)
+
+def get_id_gw_frequency_Momega22(omega, mtot):
+    # omega : orbital angular velocity from ID
+    # mtot : total mass of binary from ID
+    return 2 * mtot * omega
+
 def num_orbits_1pn(m1,m2,omega,mtot):
     # m1= BH_Christodoulou_mass_current
     # m2= NS_adm_mass
