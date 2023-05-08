@@ -108,7 +108,7 @@ class Output():
         id_gw_frequency_Momega22: Initial data: Mass-rescaled initial GW frequency (c=G=Msun=1 units)
         '''
         mtot = self.get_mtot_msun()
-        omega = self.id_dic['BHNS_angular_velocity']
+        omega = float(self.id_dic['BHNS_angular_velocity'])
         id_gw_frequency_Hz = get_id_gw_frequency_Hz(omega)
         id_gw_frequency_Momega22 = get_id_gw_frequency_Momega22(omega, mtot)
         return id_gw_frequency_Hz, id_gw_frequency_Momega22
@@ -126,5 +126,5 @@ class Output():
         else:
             Mg = 0
             print("===> Error: EoS not recognized, please add to /nrtools/initialdata/output.py")
-        return self.id_dic['BH_irreducible_mass_current'] + Mg
+        return float(self.id_dic['BH_irreducible_mass_current']) + Mg
     
