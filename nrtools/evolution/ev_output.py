@@ -2,7 +2,119 @@ import os
 import glob
 import matplotlib.pyplot as plt
 import numpy as np
+from itertools import chain
+import pyvista as pv
+import imageio
 from watpy.wave.wave import mwaves
+
+########################################
+# 2D Data class
+########################################
+class Data2D():
+    '''
+    Single field 2d data on multiple ref.levels and boxes
+    '''    
+    def __init__(self, path = '.', var = 'grhd_rho.xy', 
+                 lev = [5,6] # each level can be made of one of more box (a,b,...)
+                 ,outdir = 'viz', verbose = True):
+        self.path = os.path.abspath(path)
+        self.var = var
+        self.lev = lev
+        self.plane = var.split('.')[-1]
+        self.outdir = os.path.abspath(outdir)
+        self.verbose = verbose
+
+        os.makedirs("{}/{}".format(self.outdir,self.var),
+                    exist_ok = True)
+
+        # collect data at each iteration
+        self.timelev = dict.fromkeys(self.lev)
+        for l in self.lev:
+            self.timelev[l] = {}
+            if self.verbose: print('=> level {}'.format(l))
+            files = glob.glob("{}/{}{}_vtk/{}{}*_????.vtk".format(self.path,self.var,l,var,l))
+            print("{}/{}{}_vtk/{}{}*_????.vtk".format(self.path,self.var,l,var,l))
+            #print(self.path+'/'+self.var)
+            for f in files:
+                grid,iteration = os.path.basename(f).split('.')[-2].split('_') # .xy6a_0000. -> 'xy6a','0000'
+                iteration = int(iteration)
+                if self.verbose: print(' iteration {} grid {} file {}'.format(iteration,grid,f))
+                if iteration not in self.timelev[l]:
+                    self.timelev[l][iteration] = {}
+                    self.timelev[l][iteration]['files'] = []
+                self.timelev[l][iteration]['files'].append(f)
+            
+    def get_iterations(self):
+        iterations = np.array(list(chain.from_iterable(self.timelev[l].keys() for l in self.timelev.keys())))
+        return np.unique(iterations)
+
+    def plot_slice(self, iteration,
+                   add_warp=1, # Modifies point coordinates by moving points along point normals by the scalar amount times the scale factor.
+                   show_edges=True, # Show the edges of all geometries within a mesh
+                   show_grid=True, # Show gridlines and axes labels.
+                   add_axes=True, # Add an interactive axes widget in the bottom left corner.
+                   show=False):
+        
+        #pv.global_theme.show_edges = show_edges
+        #pv.global_theme.edge_color = 'white'
+        scalar_bar_args={'title': self.var}
+        
+        pl = pv.Plotter(off_screen=not show)
+        data = []
+        for l in self.lev:
+            if iteration in self.timelev[l].keys():
+                for df in self.timelev[l][iteration]['files']:
+                    data = pv.read(df)
+                    if add_warp > 1: 
+                        data = data.warp_by_scalar(factor=add_warp)
+                    pl.add_mesh(data, scalar_bar_args=scalar_bar_args, label='RL{}'.format(l))#, log_scale=True)
+                    if show_edges:
+                        edges = data.extract_all_edges()
+                        act = pl.add_mesh(edges, line_width=0.001, color='w',opacity=0.5)
+                
+        _ = pl.add_title('iter = {}'.format(iteration),font_size=12)
+        if show_grid: _ = pl.show_grid()
+        if add_axes: _ = pl.add_axes(line_width=5)
+        if show: pl.show(screenshot='{}/{}/{:06d}.png'.format(self.outdir,self.var,iteration))
+        else: pl.screenshot('{}/{}/{:06d}.png'.format(self.outdir,self.var,iteration))
+        pl.close()
+        
+    def plot_slices(self,imin=0,imax=np.inf,di=1,
+                    add_warp=1,
+                    show_edges=True,
+                    show_grid=True,
+                    add_axes=True,
+                    show=False):
+        
+        if self.verbose: print('Rendering...')
+        for it in self.get_iterations():
+            if it < imin: continue
+            if it > imax: continue
+            if it % di: continue
+            if self.verbose: print('iter = {}'.format(it))
+            self.plot_slice(it,
+                            add_warp=add_warp,
+                            show_edges=show_edges,
+                            show_grid=show_grid,
+                            add_axes=add_axes,
+                            show=show)
+
+    def make_movie(self,codec="mpeg4"):
+        cwd = os.getcwd()
+        os.chdir("{}/{}".format(self.outdir,self.var))
+        if codec == "mpeg4":
+            os.system("ffmpeg -framerate 25 -i %06d.png -codec mpeg4 movie.mp4")
+        os.chdir(cwd)
+
+    def make_gif(self):
+        image_dir = "{}/{}".format(self.outdir,self.var)
+        images = [os.path.join(image_dir, f) for f in os.listdir(image_dir) if f.endswith('.png')]
+        images = sorted(images)
+        output_file = image_dir+'/'+self.var+'.gif'
+        with imageio.get_writer(output_file, mode='I') as writer:
+            for image in images:
+                writer.append_data(imageio.imread(image))
+
 
 ########################################
 # EV Output class
@@ -40,6 +152,18 @@ class Ev_Output():
             self.out_1d_dir = os.path.join(self.outpath, 'output_1d')
             self.out_2d_dir = os.path.join(self.outpath, 'output_2d')
             self.out_inv_dir = os.path.join(self.outpath, 'Invariants')
+
+    def get_horizon_area(self):
+        '''
+        Returns time and the coordinate area of the apparent horizon
+        '''
+        try:
+            hfile = os.path.join(self.outpath,'horizon_0')
+            t, ca = np.loadtxt(fname=hfile, comments='#', usecols=(0,9), unpack=True)
+        except IndexError:
+            t, ca = None
+            print("===> Error: Time integration hasn't started yet")
+        return t, ca
 
     def plot_horizon_area(self):
         try:
@@ -142,6 +266,26 @@ class Ev_Output():
                 plt.legend()
                 plt.savefig(os.path.join(plots_0d,var+'.pdf'))
                 plt.show() 
+
+    def do_2d_movies(self,var='all'):
+        movies_out = os.path.join(self.outpath,'viz')
+        try:
+            os.mkdir(movies_out)
+        except FileExistsError:
+            print('Directory exists: ',movies_out)
+
+        if var=='all':
+            vars = ['grhd_rho.xy','alpha.xy','bssn_chi.xy','grhd_epsl.xy','grhd_p.xy','grhd_v2.xy','grhd_vx.xy','grhd_D.xy','hydroa_Db.xy','hydroa_Dh.xy','hydroa_Du.xy','hydroa_etot.xy','hydroa_uesc.xy']
+            for var in vars:
+                data2d = Data2D(path = self.out_2d_dir, var=var, outdir=movies_out)
+                data2d.plot_slices() 
+                data2d.make_movie()
+                data2d.make_gif()
+        else:
+            data2d = Data2D(path = self.out_2d_dir, var=var, outdir=movies_out)
+            data2d.plot_slices() 
+            data2d.make_movie()
+            data2d.make_gif()
 
     def get_mp_Rpsi4(self,Mtot,Momg22):
         '''
