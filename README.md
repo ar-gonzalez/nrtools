@@ -1,6 +1,6 @@
 # Numerical Relativity Tools
 
-*[AG, 05/05/2023]*
+*[AG, 17/05/2023]*
 
 Python package to handle and produce initial data and evolutions with Elliptica and BAM for BHNS mergers (with the intention to generalize to more).
 
@@ -8,7 +8,7 @@ Python package to handle and produce initial data and evolutions with Elliptica 
 `python setup.py install`
 
 ## Requirements
-Works with Python 3 in addition to `numpy` and `matplotlib`.
+Works with Python 3 in addition to `numpy` and `matplotlib`. To produce 2D movies one needs `pyvista`, `itertools`, and `imageio`.
 For waveform extraction, [watpy](https://git.tpi.uni-jena.de/core/watpy) is also necessary.
 
 ## Features
@@ -17,5 +17,5 @@ For waveform extraction, [watpy](https://git.tpi.uni-jena.de/core/watpy) is also
 	- Produces metadata
 	- Checks contraints and other variables
 	- Output class to check out resulting binary's parameters
-- `Evolution()` class to evolve the initial data and handle output plots
+- `Evolution()` class to evolve the initial data and handle output plots and 2D movies
 	- Waveform output to interface with WATPy and CoReDB waveforms
