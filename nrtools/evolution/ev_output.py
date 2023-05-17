@@ -169,7 +169,7 @@ class Ev_Output():
         try:
             hfile = os.path.join(self.outpath,'horizon_0')
             t, ca = np.loadtxt(fname=hfile, comments='#', usecols=(0,9), unpack=True)
-            plt.scatter(t,ca,label='AH coord. area')
+            plt.scatter(t,ca, marker='.',label='AH coord. area')
             plt.grid()
             plt.legend()
             plt.savefig(os.path.join(self.plotsdir,'AH_coord_area.pdf'))
