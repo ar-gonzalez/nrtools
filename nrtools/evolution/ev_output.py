@@ -50,7 +50,7 @@ class Ev_Output():
             plt.legend()
             plt.savefig(os.path.join(self.plotsdir,'AH_coord_area.pdf'))
             plt.show()
-        except IndexError:
+        except:
             print("===> Error: Time integration hasn't started yet")
 
     def plot_moving_puncture(self):
