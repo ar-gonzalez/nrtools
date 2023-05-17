@@ -1,6 +1,7 @@
 import os
 from .ev_parfile import *
 from .ev_output import *
+from ..initialdata.output import *
 
 def ev_folder_parser(folder_name):
     pars = folder_name.split('_')
@@ -29,9 +30,10 @@ class Evolution():
         self.path = path
         self.evname = self.path.split('/')[-1]
         self.ev_path = ev_path
+        self.idata = initial_data
         self.check_status()
         self.flux = flux
-        self.parfile = Ev_Parameter_File(self.path, self.ev_path, initial_data, resolution, lmax, lmax2, self.flux)
+        self.parfile = Ev_Parameter_File(self.path, self.ev_path, self.idata, resolution, lmax, lmax2, self.flux)
         self.ou = Ev_Output(self.path, self.status, lmax)
 
     def check_status(self):
@@ -48,6 +50,15 @@ class Evolution():
                         self.status = 'Done'
         
         print("==> Evolution Status: ",self.status)
+
+    def get_grid_spacing_min(self):
+        grid_file = [i for i in os.listdir(self.path) if i=='grid_setup.log' or i.startswith('res') or i.startswith('grid')][0]
+        with open(os.path.join(self.path,grid_file), 'r') as file:
+            for line in file:
+                if 'dxyz_finest_BH' in line.strip():
+                    dxyz = line.strip().split('= ')
+                    break
+        return float(dxyz)
 
     def write_bashfile(self, bashname = 'run_bam.sh', cluster='ARA'):
         if cluster == 'ARA':
@@ -103,3 +114,29 @@ class Evolution():
         os.chdir(self.path)
         submitjob = 'sbatch ' + os.path.join(self.path,self.bashname)
         os.system(submitjob)
+
+    def get_core_data(self):
+        ev_output = self.ou
+        id_output = self.idata.ou
+            
+        mbh, mns, mtot = id_output.get_msun_masses()
+        _, Momg22 = id_output.get_gw_freqs()
+        wm = ev_output.get_mp_Rpsi4(mtot,Momg22)
+
+        core_out = os.path.join(self.path,'CoReDB')
+        try:
+            os.mkdir(core_out)
+        except FileExistsError:
+            print('Directory exists: ',core_out)
+            
+        # Get waveforms
+        for r in wm.radii:
+            for (l,m) in wm.modes:
+                psilm = wm.get(var='Psi4',l=l, m=m, r=r)
+                psilm.write_to_txt('Psi4', core_out)
+                hlm = wm.get(l=l, m=m)
+                hlm.write_to_txt('h', core_out)
+
+        # Get energetics
+        madm, jadm = id_output.get_ADM_qtys()
+        wm.energetics(mbh, mns, madm, jadm, path_out = core_out)
