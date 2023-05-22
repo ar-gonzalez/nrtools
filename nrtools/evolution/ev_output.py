@@ -193,6 +193,24 @@ class Ev_Output():
         except IndexError:
             print("===> Error: Time integration hasn't started yet")
 
+    def get_0d_variable(self, var):
+        '''
+        Returns variable at the finest level where the puncture is
+        '''
+        norm_vars = ['alpha', 'ham', 'momx', 'momy', 'momz', 'rpsi4','ipsi4']
+        if len(os.listdir(self.out_0d_dir))==0:
+            print('===> Error: No output produced yet')
+            t0 = v0 = None
+        else:
+            lmax = self.lmax
+            if var in norm_vars:
+                outname = '_norm.l'
+            else:
+                outname = '_integral.l'
+            var0file = os.path.join(self.out_0d_dir, var + outname + str(lmax) + 'b')
+            t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
+        return t0, v0
+
     def plot_0d_output(self, var='all'):
         '''
         Input: either all variables available or a specific one, save plot or not
