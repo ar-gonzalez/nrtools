@@ -1,6 +1,9 @@
 import numpy as np
 import cmath
 import math
+from scipy.signal import tukey
+from watpy.wave.wave import rinf_str_to_float
+import re
 
 # Constants
 Msun_sec = 4.925794970773135e-06
@@ -74,3 +77,26 @@ def nu_to_q(nu):
 
 def q_to_nu(q):
     return q/((1.+q)*(1.+q))
+
+def get_rad(filename):
+    name = re.match(r'R(\w+)_l(\d+)_m(\w+)_r(\w+).txt', filename)
+    try:
+        rad1   = rinf_str_to_float(name.group(4))
+    except AttributeError:
+        name2 = re.match(r'm(\d+)', name.group(4))
+        rad1 = rinf_str_to_float(name2.group(1))
+    return rad1
+
+
+def windowing(h, alpha=0.1): 
+   """ Perform windowing with Tukey window on a given strain (time-domain) 
+       __________ 
+       h    : strain to be tapered 
+       alpha : Tukey filter slope parameter. Suggested value: alpha = 1/4/seglen 
+       Only tapers beginning of wvf, to taper both, comment: window[len(h)//2:] = 1.
+   """ 
+   window = tukey(len(h), alpha) 
+   #window[len(h)//2:] = 1. 
+   wfact  = np.mean(window**2) 
+   window = np.array(window) 
+   return h*window, wfact
