@@ -155,15 +155,15 @@ class Ev_Output():
 
     def get_horizon_area(self):
         '''
-        Returns time and the coordinate area of the apparent horizon
+        Returns time, coordinate area, and (x,y)-center of the apparent horizon
         '''
         try:
             hfile = os.path.join(self.outpath,'horizon_0')
-            t, ca = np.loadtxt(fname=hfile, comments='#', usecols=(0,9), unpack=True)
+            t, h, k, ca = np.loadtxt(fname=hfile, comments='#', usecols=(0,1,2,9), unpack=True)
         except IndexError:
-            t, ca = None
+            t, h, k, ca = None
             print("===> Error: Time integration hasn't started yet")
-        return t, ca
+        return t, ca, h, k
 
     def plot_horizon_area(self):
         try:
