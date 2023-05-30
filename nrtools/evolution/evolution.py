@@ -70,7 +70,7 @@ class Evolution():
             partition = 'standard' # compute, standard
             time = '3-0:00:00' # inf, 3-0:00:00
             memcpu = '2G'
-            modules = ['icc/latest','mkl/latest','mpi/openmpi/4.1.1']
+            modules = ['use.intel-oneapi','icc/latest','mkl/latest','mpi/openmpi/4.1.1']
         else:
             print('ERROR: Unknown cluster name. Currently available: ARA, DRACO.')
 
