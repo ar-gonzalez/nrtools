@@ -286,14 +286,14 @@ class Ev_Parameter_File():
         self.invariants['Invariants_output_time'] = self.output['2douttime']
         # Radii
         radii_string = self.invariants['invariants_modes_r']
-        radii = [int(num) for num in radii_string.split()] 
+        radii = [int(num) for num in radii_string.split()]
         try:
-            add_radii = [int(num) for num in grid_params['invariants_modes_r'].split()]
-            radii.extend(add_radii)
-        except:
             add_radii = int(grid_params['invariants_modes_r'])
             radii.append(add_radii)
-        ext_radii = ' '.join(str(num) for num in radii.sort())
+        except:
+            add_radii = [int(num) for num in grid_params['invariants_modes_r'].split()]
+            radii.extend(add_radii)
+        ext_radii = ' '.join(str(num) for num in sorted(radii))
         self.invariants['invariants_modes_r'] = ext_radii #grid_params['invariants_modes_r']
         self.invariants['invariants_energy_r'] = ext_radii #grid_params['invariants_energy_r']
         self.adm_mass['ADM_mass_r'] = ext_radii #grid_params['ADM_mass_r']
