@@ -310,9 +310,20 @@ class Ev_Parameter_File():
 
     def get_grid_params(self, initial_data, resolution, lmax, lmax2, flux, save=True):
         print('==> Setting up grid parameters for parfile ..')
+
+        iddic = initial_data.ou.id_dic
+        bhmass = float(iddic['BH_irreducible_mass_current'])
+        
+        if bhmass < 4:
+            factor = 2
+        elif bhmass < 5.5:
+            factor = 2.5
+        else:
+            factor = 3
+
         grid_params = {}
         grid_params['amr_move_nxyz'] = resolution
-        grid_params['nxyz'] = 2*grid_params['amr_move_nxyz']
+        grid_params['nxyz'] = factor*grid_params['amr_move_nxyz']
         grid_params['amr_lmax'] = lmax
         grid_params['amr_lmax2'] = lmax2
         grid_params['amr_move_lcube'] = 4
