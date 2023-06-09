@@ -13,7 +13,7 @@ ID_HEADER = {
     'eos_tab_file'           : '@@',
     # checkpointing
     'checkpoint'             : 'yes',
-    'checkpoint_dt_hours'    : '100',
+    'checkpoint_dt_hours'    : '20',
     'checkpoint_variables'   : 'all',
     'ExitIfNAN'              : 'yes'
 }
@@ -301,10 +301,8 @@ class Ev_Parameter_File():
 
         # Make parfile
         self.make_parfile()
-        # ID_HEADER, HYDRO, EVOLUTION, OUTPUT, BOUNDARY_AND_GAUGE, AHMOD, INVARIANTS, HYDROANALYSIS, ADM_MASS
         EV_PARDIC = {**self.id_header, **self.grid_setup, **self.hydro, **self.evolution, **self.output, **self.boundary_and_gauge, **self.ahmod, **self.invariants, **self.hydroanalysis, **self.adm_mass}
-        #EV_PARDIC = self.id_header + self.grid_setup + self.hydro + self.evolution + self.output + self.boundary_and_gauge + self.ahmod + self.invariants + self.hydroanalysis + self.adm_mass
-
+        
         return EV_PARDIC
 
 
