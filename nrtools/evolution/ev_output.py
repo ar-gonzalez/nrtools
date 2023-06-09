@@ -153,6 +153,25 @@ class Ev_Output():
             self.out_2d_dir = os.path.join(self.outpath, 'output_2d')
             self.out_inv_dir = os.path.join(self.outpath, 'Invariants')
 
+    def final_bh_properties(self):
+        '''
+        Returns mass, spin components, and spin of the remnant BH obtained
+        from the apparent horizon finder
+        '''
+        try:
+            hfile = os.path.join(self.outpath,'horizon_0')
+            time, mass, spinx, spiny, spinz, spin = np.loadtxt(fname=hfile, comments='#', usecols=(0,4,5,6,7), unpack=True)
+            t = time[-1]
+            mbh = mass[-1]
+            sx = spinx[-1]
+            sy = spiny[-1]
+            sz = spinz[-1]
+            s = spin[-1]
+        except IndexError:
+            t, mbh, sx, sy, sz, s = None
+            print("===> Error: Time integration hasn't started yet")
+        return t, mbh, sx, sy, sz, s
+
     def get_horizon_area(self):
         '''
         Returns time, coordinate area, and (x,y)-center of the apparent horizon
@@ -177,21 +196,27 @@ class Ev_Output():
         except:
             print("===> Error: Time integration hasn't started yet")
 
-    def plot_moving_puncture(self):
+    def extract_objects_tracks(self):
         try:
             mp_file = [i for i in os.listdir(self.outpath) if i.startswith('moving_puncture_distance.lxyz')][0]
             self.mp_path = os.path.join(self.outpath,mp_file)
 
-            px_ns, py_ns, px_bh, py_bh = np.loadtxt(fname=self.mp_path, comments='"', usecols=(0,1,3,4), unpack=True)
-
-            plt.scatter(px_ns,py_ns,color='#7fbf7b',label="NS",marker='.')
-            plt.scatter(px_bh,py_bh,color='#af8dc3',label="BH",marker='.')
-            plt.grid()
-            plt.legend()
-            plt.savefig(os.path.join(self.plotsdir,'moving_punctures.pdf'))
-            plt.show()
+            px_ns, py_ns, px_bh, py_bh, time = np.loadtxt(fname=self.mp_path, comments='"', usecols=(0,1,3,4,8), unpack=True)
         except IndexError:
+            px_ns, py_ns, px_bh, py_bh, time = None
             print("===> Error: Time integration hasn't started yet")
+        return px_ns, py_ns, px_bh, py_bh, time
+
+
+    def plot_moving_puncture(self):
+        px_ns, py_ns, px_bh, py_bh, _ = self.extract_objects_tracks()
+
+        plt.scatter(px_ns,py_ns,color='#7fbf7b',label="NS",marker='.')
+        plt.scatter(px_bh,py_bh,color='#af8dc3',label="BH",marker='.')
+        plt.grid()
+        plt.legend()
+        plt.savefig(os.path.join(self.plotsdir,'moving_punctures.pdf'))
+        plt.show()
 
     def get_0d_variable(self, var):
         '''
