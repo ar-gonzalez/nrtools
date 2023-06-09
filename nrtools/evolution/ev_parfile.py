@@ -40,7 +40,7 @@ GRID_SETUP = {
     'nxyz'                        : '@@',
     'amr_move_lcube'              : '@@',
     'dxyz'                        : '@@',
-    'amr_bo_dxmax'                : '@@',
+    'amr_bo_lmin'                 : '6',
     'amr'                         : 'bo newfmr move',
     'amr_fmr'                     : 'nestedboxes',
     'grid'                        : 'box bitant'
@@ -263,7 +263,7 @@ class Ev_Parameter_File():
         self.grid_setup['nxyz']     = grid_params['nxyz']     
         self.grid_setup['amr_move_lcube'] = grid_params['amr_move_lcube']
         self.grid_setup['dxyz']          = grid_params['dxyz']
-        self.grid_setup['amr_bo_dxmax']  = grid_params['amr_bo_dxmax']
+        #self.grid_setup['amr_bo_dxmax']  = grid_params['amr_bo_dxmax']
         
         # HYDRO
         if flux=='LLF':
