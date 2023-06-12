@@ -56,7 +56,7 @@ class Evolution():
         with open(os.path.join(self.path,grid_file), 'r') as file:
             for line in file:
                 if 'dxyz_finest_BH' in line.strip():
-                    dxyz = line.strip().split('= ')
+                    dxyz = line.strip().split('= ')[-1].split(' # ')[0]
                     break
         return float(dxyz)
 
@@ -142,63 +142,82 @@ class Evolution():
         wm.energetics(mbh, mns, madm, jadm, path_out = core_out)
         self.core_out = core_out
 
-    def output_metadata(self):
+    def output_metadata(self, author='alejandra'):
         '''
         Outputs a dictionary of the simulation's important parameters
         and print them in a file `metadata.txt`
         '''
         simkeys = {}
-        simname = "/".join(self.idata.simname,self.evname)
-        simkeys['simname'] = simname
-        simkeys['author'] = "Alejandra Gonzalez <alejandra.gonzalez@uni-jena.de>"
+        simname = "/".join([self.idata.simname,self.evname])
+        simkeys['simulation_name'] = simname
+
+        if author=='alejandra':
+            simkeys['author'] = "Alejandra Gonzalez <alejandra.gonzalez@uni-jena.de>"
+        elif author=='fabio':
+            simkeys['author'] = "Fabio Magistrelli <fabio.magistrelli@uni-jena.de>"
+        elif author=='francesco':
+            simkeys['author'] = "Francesco Brandoli <francesco.brandoli@uni-jena.de>"
+        else:
+            print("Who is ",author,"?")
 
         # Initial Data
         simkeys['ID_type'] = "BHNS"
         simkeys['ID_code'] = "Elliptica"
-        simkeys['initial_separation'] = self.idata.simname.split('_')[-1][-2]
-        simkeys['initial_orbital_frequency'] = ""
+        simkeys['initial_separation'] = self.idata.simname.split('_')[-1][-2:]
+        #simkeys['initial_orbital_angular_velocity'] = self.idata.ou.id_dic['BHNS_angular_velocity']
+        fhz, fm22 = self.idata.ou.get_gw_freqs()
+        simkeys['initial_gw_frequency_Hz'] = "{:.2f}".format(fhz)
+        simkeys['initial_gw_frequency_Momega22'] = "{:.5f}".format(fm22)
         simkeys['EoS'] = self.idata.simname.split('_')[0]
-        simkeys['initial_mass1'] = self.idata.simname.split('_')[2][-3]
-        simkeys['initial_mass2'] = self.idata.simname.split('_')[4][-3]
+        m1, m2, _ = self.idata.ou.get_msun_masses()
+        simkeys['initial_mass1'] = "{:.2f}".format(m1) #self.idata.simname.split('_')[2][1:]
+        simkeys['initial_mass2'] = "{:.2f}".format(m2) #self.idata.simname.split('_')[4][1:]
 
         # Evolution Data
-        self.get_core_data()
-        h22_file = sorted([i for i in os.listdir(self.core_out) if i.startswith('Rh_l2_m2_r')])[-1]
-        time22, amp22 = np.loadtxt(fname=h22_file, comments='#', usecols=(6,4), unpack=True)
-        tmrg = time22[np.argmax(amp22)]
+        try:
+            self.get_core_data()
+            h22_file = sorted([i for i in os.listdir(self.core_out) if i.startswith('Rh_l2_m2_r')])[-1]
+            time22, amp22 = np.loadtxt(fname=os.path.join(self.core_out,h22_file), comments='#', usecols=(6,4), unpack=True)
+            tmrg = time22[np.argmax(amp22)]
         
-        _, _, px2, _, tpx2 = self.ou.extract_objects_tracks() # of the BH
-        until_merger = np.where(tpx2<(tmrg+1) and tpx2>(tmrg-1))[0]
-        orbits = px2[:until_merger].count(px2[:until_merger][0])
+            _, _, px2, _, tpx2 = self.ou.extract_objects_tracks() # of the BH
+            until_merger = np.where((tpx2<(tmrg+1))&(tpx2>(tmrg-1)))[0]
+            until_merger = until_merger[0]
+            px2_um = px2[:until_merger]
+            orbits = list(px2_um).count(px2_um[0]) - 1 # minus the starting point
+        except:
+            tmrg = 0
+            orbits = 0
 
         simkeys['evolution_code'] = "BAM"
-        simkeys['merger_time'] = tmrg
+        simkeys['grid_spacing_min'] = self.get_grid_spacing_min()
+        simkeys['merger_time'] = "{:.2f}".format(tmrg)
         simkeys['number_of_orbits'] = orbits
 
         # Remnant and PM
         t, mbh, sx, sy, sz, s = self.ou.final_bh_properties()
-        simkeys['final_time'] = t
-        simkeys['remnant_mass'] = mbh
-        simkeys['remnant_dimensionless_spin'] = ", ".join(str(sx/(mbh*mbh)), str(sy/(mbh*mbh)), str(sz/(mbh*mbh)))
+        simkeys['final_time'] = "{:.2f}".format(t)
+        simkeys['remnant_mass'] = "{:.4f}".format(mbh)
+        simkeys['remnant_dimensionless_spin'] = ", ".join([str(sx/(mbh*mbh)), str(sy/(mbh*mbh)), str(sz/(mbh*mbh))])
 
         # Print
         with open(os.path.join(self.path,'metadata.txt'), 'w') as f:
             f.write("#-----------------------------------------------\n")
             f.write("# General information about the simulation\n")
             f.write("#-----------------------------------------------\n")
-            for key, value in self.id_header.items():
+            for key, value in simkeys.items():
                 if key=='ID_type':
-                    f.write("#-----------------------------------------------\n")
+                    f.write("\n#-----------------------------------------------\n")
                     f.write("# Initial Data\n")
                     f.write("#-----------------------------------------------\n")
                     f.write('%s =   %s\n' % (key, value))
                 elif key=='evolution_code':
-                    f.write("#-----------------------------------------------\n")
+                    f.write("\n#-----------------------------------------------\n")
                     f.write("# Evolution\n")
                     f.write("#-----------------------------------------------\n")
                     f.write('%s =   %s\n' % (key, value))
                 elif key=='final_time':
-                    f.write("#-----------------------------------------------\n")
+                    f.write("\n#-----------------------------------------------\n")
                     f.write("# Remnant Properties\n")
                     f.write("#-----------------------------------------------\n")
                     f.write('%s =   %s\n' % (key, value))

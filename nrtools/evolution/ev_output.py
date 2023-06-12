@@ -160,7 +160,7 @@ class Ev_Output():
         '''
         try:
             hfile = os.path.join(self.outpath,'horizon_0')
-            time, mass, spinx, spiny, spinz, spin = np.loadtxt(fname=hfile, comments='#', usecols=(0,4,5,6,7), unpack=True)
+            time, mass, spinx, spiny, spinz, spin = np.loadtxt(fname=hfile, comments='#', usecols=(0,4,5,6,7,8), unpack=True)
             t = time[-1]
             mbh = mass[-1]
             sx = spinx[-1]
@@ -203,7 +203,7 @@ class Ev_Output():
 
             px_ns, py_ns, px_bh, py_bh, time = np.loadtxt(fname=self.mp_path, comments='"', usecols=(0,1,3,4,8), unpack=True)
         except IndexError:
-            px_ns, py_ns, px_bh, py_bh, time = None
+            px_ns = py_ns = px_bh = py_bh = time = None
             print("===> Error: Time integration hasn't started yet")
         return px_ns, py_ns, px_bh, py_bh, time
 
