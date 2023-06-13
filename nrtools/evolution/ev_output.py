@@ -137,8 +137,8 @@ class Ev_Output():
         if status=='Not started':
             print('===> Error: Evolution has not started yet')
         else:
-            folder_name = [i for i in os.listdir(path) if os.path.isdir(os.path.join(path,i)) and i.startswith('bam')][0]
-            self.outpath = os.path.join(path,folder_name) # where the sim output is
+            #folder_name = [i for i in os.listdir(path) if os.path.isdir(os.path.join(path,i)) and i.startswith('bam')][0]
+            self.outpath = os.path.join(path,'bam_evo') # where the sim output is
             self.plotsdir = os.path.join(path,'plots')
             try:
                 os.mkdir(self.plotsdir)
