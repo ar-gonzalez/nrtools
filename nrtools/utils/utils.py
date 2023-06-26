@@ -27,7 +27,7 @@ def j_3pn(mo,q):
     lam = -1987. / 3080.
     ost = 0 # omega_static in the paper    
     nu = q_to_nu(q)
-    term1 = 1 + (- 1.5 - nu/6)*pow(mo,2/3)
+    term1 = 1 + (1.5 + nu/6)*pow(mo,2/3)
     term2 = ( 27/8 - nu*19/8 + nu*nu/24)*pow(mo,4/3)
     inside_term = -209323/5040 + np.pi*np.pi*41/24 + lam*88/9
     term3 = ( 135/16 + inside_term*nu + nu*nu*31/24 + nu*nu*nu*7/1296)*mo*mo
