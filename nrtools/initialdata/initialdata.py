@@ -32,7 +32,6 @@ class Initial_Data():
         else:
             print("==> Create new ID")
             self.make_parfile()  
-            self.write_bashfile()
 
     def check_status(self):
         self.id_outdir = os.path.join(self.path,self.simname+'_00')
@@ -72,28 +71,54 @@ class Initial_Data():
             for key, value in pardic.items():
                 f.write('%s =   %s\n' % (key, value))
 
-    def write_bashfile(self,bashname= 'run_elliptica.sh'):
+    def write_bashfile(self,bashname= 'run_elliptica.sh',cluster='ARA'):
+        if cluster == 'ARA':
+            partition = 'b_standard'
+            cpus = '24'
+            time = '8-0:00:00'
+            memcpu = 'MaxMemPerCPU'
+            modules = ['mpi/openmpi/2.1.3-gcc-7.3.0','mpi/intel/2019-Update3','compiler/intel/2019-Update3']
+        elif cluster == 'DRACO':
+            partition = 'standard' # compute, standard
+            cpus = '36'
+            time = '3-0:00:00' # inf, 3-0:00:00
+            memcpu = '2G'
+            modules = ['use.intel-oneapi','icc/latest','mkl/latest','mpi/openmpi/4.1.1']
+        elif cluster == 'PAF':
+            partition = 'workstation' # pool, check if they are not down!
+            cpus = '6'
+            time = '14-0:00:00' # infinite 
+            memcpu = '2G'
+            modules = ['PAFenv', 'intel-2020.02']
+        else:
+            print('ERROR: Unknown cluster name. Currently available: ARA, DRACO, or PAF')
+
         bss = open(os.path.join(self.simpath,bashname), 'a')
         self.bashname = bashname
         bss.write('#!/bin/bash \n')
-        bss.write('#SBATCH --partition s_standard \n')
+        bss.write('#SBATCH --partition '+partition+' \n')
         bss.write('#SBATCH -J '+self.simname+'\n')
         bss.write('#SBATCH -o '+os.path.join(self.simpath,'out.log')+' \n')
         bss.write('#SBATCH -N 1 \n')
         bss.write('#SBATCH -n 1 \n')
-        bss.write('#SBATCH -t 8-8:00:00 \n')
+        bss.write('#SBATCH -t '+time+' \n')
         bss.write('#SBATCH --mail-user=alejandra.gonzalez@uni-jena.de \n')
         bss.write('#SBATCH --mail-type=begin \n')
         bss.write('#SBATCH --mail-type=end \n')
-        bss.write('#SBATCH --cpus-per-task=32 \n')
-        bss.write('#SBATCH  --mem-per-cpu=MaxMemPerCPU \n\n')
+        bss.write('#SBATCH --cpus-per-task='+cpus+' \n')
+        bss.write('#SBATCH  --mem-per-cpu='+memcpu+' \n\n')
         bss.write('export OUTDIR='+self.simpath+' \n')
         bss.write('export PAR='+self.simname+' \n')
         bss.write('export ELLIPTICA='+self.id_exe+' \n')
-        bss.write('export OMP_NUM_THREADS=16 \n\n')
+        bss.write('export OMP_NUM_THREADS='+cpus+' \n\n')
         bss.write('module purge \n')
-        bss.write('module load compiler/gcc/10.2.0 \n')
-        bss.write('module load compiler/intel/2020-Update2 \n\n')
+        
+        for mod in modules:
+            if mod == modules[-1]:
+                bss.write('module load '+mod+' \n\n')
+            else:
+                bss.write('module load '+mod+' \n')
+
         bss.write('time srun $ELLIPTICA $OUTDIR/$PAR.par > $OUTDIR/job.log \n')
         bss.close()
 
