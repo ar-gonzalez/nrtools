@@ -116,7 +116,9 @@ OUTPUT = {
     '2doutput'                    : 'alpha bssn_chi grhd_rho ham momx momy momz betax grhd_D grhd_vx grhd_v2 grhd_epsl grhd_p hydroa_uesc hydroa_Du hydroa_Db hydroa_Dh hydroa_etot',
     '2dformat'                    : 'vtk binary float',
     '2doutinterpolate'            : 'no',
-    '2doutputr'                   : 'sphere_data'
+    '2doutputr'                   : 'sphere_data',
+    '3douttime'                   :  '@@',
+    '3doutput'                    :  'bssn_chi grhd_rho hydroa_Du hydroa_Db',
 }
 
 BOUNDARY_AND_GAUGE = {
@@ -242,7 +244,6 @@ class Ev_Parameter_File():
     def parameter_dictionary(self, ev_path, initial_data, resolution, lmax, lmax2, flux):
         # get grid specific parameters for the binary:
         grid_params = self.get_grid_params(initial_data, resolution, lmax, lmax2, flux)
-        #ev_dir = ev_exe.split('/')[-2:].join('/')
         eos_tab_path = os.path.join(ev_path,'src/projects/eos/tab/pwpfits')
 
         ## Fill necessary values:
@@ -270,6 +271,7 @@ class Ev_Parameter_File():
             self.hydro['hrsc_rec_metric'] = 'LAG6'
             self.hydro['hrsc_flux']  = 'LLF'
         elif flux=='EFL':
+            self.hydro['hrsc_rec'] = 'CENO3'
             self.hydro['hrsc_rec_metric'] = 'LAG4'
             self.hydro['hrsc_flux']  = 'HOEV2'
             self.hydro = {**self.hydro, **self.entropy_viscosity}
@@ -281,6 +283,10 @@ class Ev_Parameter_File():
         self.output['0douttime'] = grid_params['douttime0']
         self.output['1douttime'] = grid_params['douttime1']
         self.output['2douttime'] = grid_params['douttime2']
+        self.output['3douttime'] = grid_params['douttime2']*4
+        if flux=='EFL':
+            self.output['2doutput'] += ' grhd_entro grhd_viscD' 
+
         # OTHERS
         self.ahmod['AHmod_time'] = self.output['2douttime']
         self.invariants['Invariants_output_time'] = self.output['2douttime']
