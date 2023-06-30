@@ -73,11 +73,11 @@ class Initial_Data():
 
     def write_bashfile(self,bashname= 'run_elliptica.sh',cluster='ARA'):
         if cluster == 'ARA':
-            partition = 'b_standard'
-            cpus = '24'
+            partition = 's_standard'
+            cpus = '32'
             time = '8-0:00:00'
             memcpu = 'MaxMemPerCPU'
-            modules = ['mpi/openmpi/2.1.3-gcc-7.3.0','mpi/intel/2019-Update3','compiler/intel/2019-Update3']
+            modules = ['compiler/gcc/10.2.0','compiler/intel/2020-Update2']
         elif cluster == 'DRACO':
             partition = 'standard' # compute, standard
             cpus = '36'
@@ -89,7 +89,7 @@ class Initial_Data():
             cpus = '6'
             time = '14-0:00:00' # infinite 
             memcpu = '2G'
-            modules = ['PAFenv', 'intel-2020.02']
+            modules = ['intel-2020.02']
         else:
             print('ERROR: Unknown cluster name. Currently available: ARA, DRACO, or PAF')
 
