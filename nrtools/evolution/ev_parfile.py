@@ -13,7 +13,7 @@ ID_HEADER = {
     'eos_tab_file'           : '@@',
     # checkpointing
     'checkpoint'             : 'yes',
-    'checkpoint_dt_hours'    : '20',
+    'checkpoint_dt_hours'    : '10',
     'checkpoint_variables'   : 'all',
     'ExitIfNAN'              : 'yes'
 }
@@ -26,7 +26,7 @@ GRID_SETUP = {
     'advection_lopsided'          : '1',
     'order_dissipation'           : '6',
     'dissipation_factor'          : '0.5',
-    'dissipation_factor_level0'   : '0.5',
+    'dissipation_factor_shells'   : '0.1',
     'bampi_timer_on'              : 'yes',
     'bampi_lowlatency'            : 'yes',
     'bampi_nghosts'               : '6',
@@ -35,12 +35,11 @@ GRID_SETUP = {
     'amr_nbuffer'                 : '6',
     'amr_npunctures'              : '1',
     'amr_lmax'                    : '@@',
-    'amr_lmax2'                   : '@@',
     'amr_move_nxyz'               : '@@',
     'nxyz'                        : '@@',
     'amr_move_lcube'              : '@@',
     'dxyz'                        : '@@',
-    'amr_bo_lmin'                 : '6',
+    'amr_bo_lmin'                 : '4',
     'amr'                         : 'bo newfmr move',
     'amr_fmr'                     : 'nestedboxes',
     'grid'                        : 'box bitant'
@@ -134,7 +133,7 @@ BOUNDARY_AND_GAUGE = {
     
 AHMOD = {
     # AHmod
-    'AHmod_verbose'               : 'yes',
+    'AHmod_verbose'               : 'no',
     'AHmod_ntheta'                : '100',
     'AHmod_nphi'                  : '100',
     'AHmod_nhorizons'             : '1',
@@ -259,7 +258,8 @@ class Ev_Parameter_File():
 
         # GRID_SETUP
         self.grid_setup['amr_lmax'] = grid_params['amr_lmax']
-        self.grid_setup['amr_lmax2'] = grid_params['amr_lmax2']
+        if lmax>lmax2:
+            self.grid_setup['amr_lmax2'] = grid_params['amr_lmax2']
         self.grid_setup['amr_move_nxyz'] = grid_params['amr_move_nxyz']
         self.grid_setup['nxyz']     = grid_params['nxyz']     
         self.grid_setup['amr_move_lcube'] = grid_params['amr_move_lcube']
@@ -320,6 +320,10 @@ class Ev_Parameter_File():
         
         if bhmass < 4:
             factor = 2
+            if lmax==lmax2:
+                factor = 1.5
+            else:
+                factor = 1.7
         elif bhmass < 5.5:
             factor = 2.5
         else:
@@ -330,7 +334,7 @@ class Ev_Parameter_File():
         grid_params['nxyz'] = factor*grid_params['amr_move_nxyz']
         grid_params['amr_lmax'] = lmax
         grid_params['amr_lmax2'] = lmax2
-        grid_params['amr_move_lcube'] = 4
+        grid_params['amr_move_lcube'] = 2
         grid_params['dtfac'] = 0.25
 
         assert(grid_params['amr_lmax'] >= grid_params['amr_lmax2'])
