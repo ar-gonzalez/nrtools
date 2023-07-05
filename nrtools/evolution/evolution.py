@@ -127,7 +127,7 @@ class Evolution():
         submitjob = 'sbatch ' + os.path.join(self.path,self.bashname)
         os.system(submitjob)
 
-    def write_bashfile_pbs(self, bashname = 'run_bam.pbs', cluster='HAWK'):
+    def write_bashfile_pbs(self, jobsub = 'run_bam.pbs', cluster='HAWK'):
         if cluster == 'HAWK':
             node = 'rome'
             time = '24:00:00'
@@ -135,8 +135,8 @@ class Evolution():
         else:
             print('ERROR: Unknown cluster name. Currently available: HAWK')
 
-        bss = open(os.path.join(self.path,bashname), 'a')
-        self.bashname = bashname
+        bss = open(os.path.join(self.path,jobsub), 'a')
+        self.bashname = jobsub
         bss.write('#!/bin/bash \n')
         bss.write('#PBS -N '+self.evname+'\n')
         bss.write('#PBS -o bam_out.log \n')
