@@ -59,8 +59,24 @@ class Evolution():
                     dxyz = line.strip().split('= ')[-1].split(' # ')[0]
                     break
         return float(dxyz)
+    
+    def write_bashfile(self, batchsys='slurm', cluster='ARA'):
+        if batchsys=='slurm':
+            jobsub = 'run_bam.sh'
+            self.write_bashfile_slurm(jobsub, cluster)
+        elif batchsys=='pbs':
+            jobsub = 'run_bam.pbs'
+            self.write_bashfile_pbs(jobsub, cluster)
+        else:
+            print('ERROR: Unknown batch system. Currently available: slurm, pbs.')
 
-    def write_bashfile(self, bashname = 'run_bam.sh', cluster='ARA'):
+    def run_job(self, batchsys='slurm'):
+        if batchsys=='slurm':
+            self.run_job_slurm()
+        elif batchsys=='pbs':
+            self.run_job_pbs()
+
+    def write_bashfile_slurm(self, jobsub = 'run_bam.sh', cluster='ARA'):
         if cluster == 'ARA':
             partition = 'b_standard'
             time = '8-0:00:00'
@@ -74,8 +90,8 @@ class Evolution():
         else:
             print('ERROR: Unknown cluster name. Currently available: ARA, DRACO.')
 
-        bss = open(os.path.join(self.path,bashname), 'a')
-        self.bashname = bashname
+        bss = open(os.path.join(self.path,jobsub), 'a')
+        self.bashname = jobsub
         bss.write('#!/bin/bash \n')
         bss.write('#SBATCH --partition '+partition+' \n')
         bss.write('#SBATCH -J '+self.evname+'\n')
@@ -100,19 +116,54 @@ class Evolution():
                 bss.write('module load '+mod+' \n\n')
             else:
                 bss.write('module load '+mod+' \n')
-                
-        #if self.flux=='EFL':
-        #    exe_file = os.path.join(self.ev_path,'exe/bam_wEFL')
-        #else:
-        #    exe_file = os.path.join(self.ev_path,'exe/bam_noEFL')
+
         exe_file = os.path.join(self.ev_path,'exe/bam_merged')
 
         bss.write('time mpirun -n 16 '+exe_file+' -nt 6 bam_evo.par \n')
         bss.close()
 
-    def run_job(self):
+    def run_job_slurm(self):
         os.chdir(self.path)
         submitjob = 'sbatch ' + os.path.join(self.path,self.bashname)
+        os.system(submitjob)
+
+    def write_bashfile_pbs(self, bashname = 'run_bam.pbs', cluster='HAWK'):
+        if cluster == 'HAWK':
+            node = 'rome'
+            time = '24:00:00'
+            modules = ['hlrs-software-stack/.9','hlrs-software-stack/current','impi/2021.9.0','intel/19.1.3','mkl/2023.1.0']
+        else:
+            print('ERROR: Unknown cluster name. Currently available: HAWK')
+
+        bss = open(os.path.join(self.path,bashname), 'a')
+        self.bashname = bashname
+        bss.write('#!/bin/bash \n')
+        bss.write('#PBS -N '+self.evname+'\n')
+        bss.write('#PBS -o bam_out.log \n')
+        bss.write('#PBS -e error.err \n')
+        bss.write('#PBS -l select=4:node_type='+node+':mpiprocs=32:ompthreads=4 \n')
+        bss.write('#PBS -l walltime='+time+' \n')
+        bss.write('#PBS -M alejandra.gonzalez@uni-jena.de \n')
+        bss.write('export OMP_NUM_THREADS=4 \n')
+        bss.write('export I_MPI_DEBUG=5 \n')
+        bss.write('export KMP_AFFINITY=verbose,granularity=fine,scatter \n\n')
+        bss.write('module purge \n')
+
+        for mod in modules:
+            if mod == modules[-1]:
+                bss.write('module load '+mod+' \n\n')
+            else:
+                bss.write('module load '+mod+' \n')
+
+        bss.write('cd $PBS_O_WORKDIR \n')
+        exe_file = os.path.join(self.ev_path,'exe/bam_merged')
+
+        bss.write('time mpirun -n 128 '+exe_file+' -nt 4 bam_evo.par \n')
+        bss.close()
+
+    def run_job_pbs(self):
+        os.chdir(self.path)
+        submitjob = 'qsub ' + os.path.join(self.path,self.bashname)
         os.system(submitjob)
 
     def get_core_data(self):
