@@ -69,7 +69,10 @@ HYDRO = {
     'matter_interpolate_scheme_restriction'  : 'linear',
     'matter_interpolate_scheme_prolongation' : 'linear',
     'conservative_amr'            : 'yes',
-    'camr_treshold'               : '1e20'
+    'camr_treshold'               : '1e20',
+    'grhd_use_excision'           : 'yes',
+    'grhd_excision_rfct'          : '0.9',
+    'grhd_excision_modus'         : 'atm'
 }
     
 ENTROPY_VISCOSITY = {
@@ -145,7 +148,7 @@ AHMOD = {
     'AHmod_flow_iter'             : '5000',
     'AHmod_mass_tol'              : '5.0e-06',
     'AHmod_hmean_tol'             : '100.0',
-    'AHmod_time'                  : '@@', #mod
+    'AHmod_time'                  : '@@', 
     'AHmod_shrinking'             : '2.0',
     'AHmod_output'                : 'yes',
     'AHmod_output_xyt'            : 'no',
@@ -157,16 +160,16 @@ INVARIANTS = {
     'ntheta'                                  : '47',
     'nphi'                                    : '46',
     'invariants_compute_modes'                : 'yes',
-    'invariants_modes_r'                      : '300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 2000 2500', #mod
+    'invariants_modes_r'                      : '300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 2000 2500', 
     'invariants_modes_lmin'                   : '0',
     'invariants_modes_lmax'                   : '4',
-    'invariants_energy_r'                     : '300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 2000 2500', #mod
+    'invariants_energy_r'                     : '300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 2000 2500', 
     'gauss_codacci_mainardi'                  : 'standard',
     'invariants_order'                        : '4',
     'invariants_compute_modes_general'        : 'no',
     'mode_lmax'                               : '6',
     'invariants_modes_output'                 : 'all',
-    'Invariants_output_time'                  : '@@' #mod
+    'Invariants_output_time'                  : '@@'
 }  
 
 HYDROANALYSIS = {
@@ -188,7 +191,7 @@ ADM_MASS = {
     'ADM_mass_npoints'          : '80',
     'ADM_mass_lmin'             : '0',
     'ADM_mass_lmax'             : '7',
-    'ADM_mass_r'                : '300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 2000 2500' #mod
+    'ADM_mass_r'                : '300 400 500 600 700 800 900 1000 1100 1200 1300 1400 1500 2000 2500' 
 }
 
 ########################################
