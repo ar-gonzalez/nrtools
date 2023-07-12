@@ -225,7 +225,7 @@ class Ev_Parameter_File():
                             keyval = line.strip().split('#')[0]
                             key, value = keyval.split('=')
                         else:
-                            key, value = line.strip().split(' = ')
+                            key, value = line.strip().split('=')
                         EV_PARDICR[key] = value
 
             self.pardic = EV_PARDICR
