@@ -218,7 +218,7 @@ class Ev_Output():
         plt.savefig(os.path.join(self.plotsdir,'moving_punctures.pdf'))
         plt.show()
 
-    def get_0d_variable(self, var):
+    def get_0d_variable(self, var, lvl):
         '''
         Returns variable at the finest level where the puncture is
         '''
@@ -226,13 +226,15 @@ class Ev_Output():
         if len(os.listdir(self.out_0d_dir))==0:
             print('===> Error: No output produced yet')
             t0 = v0 = None
+        elif lvl>self.lmax:
+            print('===> Error: Cannot extract at level ',lvl,', when only ',self.lmax,' levels are available')
+            t0 = v0 = None
         else:
-            lmax = self.lmax
             if var in norm_vars:
                 outname = '_norm.l'
             else:
                 outname = '_integral.l'
-            var0file = os.path.join(self.out_0d_dir, var + outname + str(lmax) + 'b')
+            var0file = os.path.join(self.out_0d_dir, var + outname + str(lvl) + 'b')
             t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
         return t0, v0
 
