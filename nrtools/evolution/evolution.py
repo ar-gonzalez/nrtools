@@ -228,7 +228,7 @@ class Evolution():
         try:
             self.get_core_data()
             h22_file = sorted([i for i in os.listdir(self.core_out) if i.startswith('Rh_l2_m2_r')])[-1]
-            time22, amp22 = np.loadtxt(fname=os.path.join(self.core_out,h22_file), comments='#', usecols=(6,4), unpack=True)
+            time22, amp22 = np.loadtxt(fname=os.path.join(self.core_out,h22_file), comments='#', usecols=(0,4), unpack=True)
             tmrg = time22[np.argmax(amp22)]
         
             _, _, px2, _, tpx2 = self.ou.extract_objects_tracks() # of the BH
