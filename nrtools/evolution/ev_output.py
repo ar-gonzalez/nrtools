@@ -226,7 +226,7 @@ class Ev_Output():
         if len(os.listdir(self.out_0d_dir))==0:
             print('===> Error: No output produced yet')
             t0 = v0 = None
-        elif lvl>self.lmax:
+        elif lvl>int(self.lmax):
             print('===> Error: Cannot extract at level ',lvl,', when only ',self.lmax,' levels are available')
             t0 = v0 = None
         else:
@@ -234,7 +234,10 @@ class Ev_Output():
                 outname = '_norm.l'
             else:
                 outname = '_integral.l'
-            var0file = os.path.join(self.out_0d_dir, var + outname + str(lvl) + 'b')
+            try:
+                var0file = os.path.join(self.out_0d_dir, var + outname + str(lvl))
+            except:
+                var0file = os.path.join(self.out_0d_dir, var + outname + str(lvl) + 'b')
             t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
         return t0, v0
 
