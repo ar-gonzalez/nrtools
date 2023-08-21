@@ -5,7 +5,8 @@ ID_HEADER = {
     'physics' : 'adm z4 Gauge matter eos grhd EIDdataReader Invariants AHmod ADM_mass hydroanalysis',
     # initial data
     'EIDdataReader_exe'      : '@@',
-    'EIDdataReader_datadir'  : '@@',
+    'EIDdataReader_checkpoint'  : '@@',
+    'EIDdataReader_save'     : 'yes',
     'EIDdataReader_physics'  : 'BHNS',
     'EIDdataReader_BHfiller' : 'ChebTn_Ylm_perfect_s2',
     # eos
@@ -252,7 +253,7 @@ class Ev_Parameter_File():
 
         # ID_HEADER
         self.id_header['EIDdataReader_exe'] = initial_data.id_exe
-        self.id_header['EIDdataReader_datadir'] = os.path.join(initial_data.ou.outpath,initial_data.ou.hr_path)
+        self.id_header['EIDdataReader_checkpoint'] = os.path.join(os.path.join(initial_data.ou.outpath,initial_data.ou.hr_path),'checkpoint.dat')
         eos = initial_data.parfile.pardic['NS_EoS_description'][-3:]
         try:
             self.id_header['eos_tab_file'] = os.path.join(eos_tab_path,'eos_'+eos.lower()+'.pwp')

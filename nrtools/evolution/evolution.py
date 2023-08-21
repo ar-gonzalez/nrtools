@@ -81,7 +81,7 @@ class Evolution():
             partition = 'b_standard'
             time = '8-0:00:00'
             memcpu = 'MaxMemPerCPU'
-            modules = ['mpi/openmpi/2.1.3-gcc-7.3.0','mpi/intel/2019-Update3','compiler/intel/2019-Update3']
+            modules = ['mpi/intel/2020-Update2']
         elif cluster == 'DRACO':
             partition = 'standard' # compute, standard
             time = '3-0:00:00' # inf, 3-0:00:00
@@ -117,7 +117,7 @@ class Evolution():
             else:
                 bss.write('module load '+mod+' \n')
 
-        exe_file = os.path.join(self.ev_path,'exe/bam_merged')
+        exe_file = os.path.join(self.ev_path,'exe/bam')
 
         bss.write('time mpirun -n 16 '+exe_file+' -nt 6 bam_evo.par \n')
         bss.close()
