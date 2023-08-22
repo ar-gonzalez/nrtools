@@ -86,7 +86,7 @@ class Evolution():
             partition = 'standard' # compute, standard
             time = '3-0:00:00' # inf, 3-0:00:00
             memcpu = '2G'
-            modules = ['use.intel-oneapi','icc/latest','mkl/latest','mpi/openmpi/4.1.1']
+            modules = ['use.intel-oneapi','mpi/latest']
         else:
             print('ERROR: Unknown cluster name. Currently available: ARA, DRACO.')
 
@@ -117,7 +117,7 @@ class Evolution():
             else:
                 bss.write('module load '+mod+' \n')
 
-        exe_file = os.path.join(self.ev_path,'exe/bam')
+        exe_file = os.path.join(self.ev_path,'exe/bam_latest')
 
         bss.write('time mpirun -n 16 '+exe_file+' -nt 6 bam_evo.par \n')
         bss.close()
@@ -139,8 +139,8 @@ class Evolution():
         self.bashname = jobsub
         bss.write('#!/bin/bash \n')
         bss.write('#PBS -N '+self.evname+'\n')
-        bss.write('#PBS -o bam_out.log \n')
-        bss.write('#PBS -e error.err \n')
+        bss.write('#PBS -o /lustre/hpe/ws10/ws10.3/ws/xujapigo-bhns/'+self.evname+'/bam_out.log \n')
+        bss.write('#PBS -e /lustre/hpe/ws10/ws10.3/ws/xujapigo-bhns/'+self.evname+'/error.err \n')
         bss.write('#PBS -l select=4:node_type='+node+':mpiprocs=32:ompthreads=4 \n')
         bss.write('#PBS -l walltime='+time+' \n')
         bss.write('#PBS -M alejandra.gonzalez@uni-jena.de \n')
@@ -155,10 +155,9 @@ class Evolution():
             else:
                 bss.write('module load '+mod+' \n')
 
-        bss.write('cd $PBS_O_WORKDIR \n')
-        exe_file = os.path.join(self.ev_path,'exe/bam_merged')
+        exe_file = os.path.join(self.ev_path,'exe/bam_latest')
 
-        bss.write('time mpirun -n 128 '+exe_file+' -nt 4 bam_evo.par \n')
+        bss.write('time mpirun -n 128 '+exe_file+' -nt 4 /lustre/hpe/ws10/ws10.3/ws/xujapigo-bhns/'+self.evname+'/bam_evo.par \n')
         bss.close()
 
     def run_job_pbs(self):
