@@ -292,7 +292,7 @@ class Ev_Parameter_File():
             self.output['2doutput'] += ' grhd_entro grhd_viscD' 
 
         # OTHERS
-        self.ahmod['AHmod_time'] = self.output['2douttime']
+        self.ahmod['AHmod_time'] = self.output['3douttime']
         self.invariants['Invariants_output_time'] = self.output['2douttime']
         # Radii
         radii_string = self.invariants['invariants_modes_r']
