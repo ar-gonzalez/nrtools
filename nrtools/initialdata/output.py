@@ -27,11 +27,15 @@ class Output():
             self.simname = simname
             self.id_outdir = id_outdir
             self.verbose = verbose
-            self.hr_path = sorted(os.listdir(self.id_outdir))[-1] # Path to highest resolution ID
-            self.sr_path = sorted(os.listdir(self.id_outdir))[-2] # Path to second highest resolution ID
-            self.outpath = os.path.join(self.path,self.simname+'_00')
-            self.txt_path = os.path.join(os.path.join(self.outpath,self.hr_path),'BHNS_properties.txt')
-            self.read_md()
+            if status=='Done':
+                self.hr_path = sorted(os.listdir(self.id_outdir))[-1] # Path to highest resolution ID
+                if self.hr_path.endswith("_01"):
+                    self.sr_path = sorted(os.listdir(self.id_outdir))[-3]
+                else:
+                    self.sr_path = sorted(os.listdir(self.id_outdir))[-2] # Path to second highest resolution ID
+                self.outpath = os.path.join(self.path,self.simname+'_00')
+                self.txt_path = os.path.join(os.path.join(self.outpath,self.hr_path),'BHNS_properties.txt')
+                self.read_md()
 
     def get_resolutions(self):
         '''
