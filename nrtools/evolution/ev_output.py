@@ -236,9 +236,10 @@ class Ev_Output():
                 outname = '_integral.l'
             try:
                 var0file = os.path.join(self.out_0d_dir, var + outname + str(lvl))
-            except:
-                var0file = os.path.join(self.out_0d_dir, var + outname + str(lvl) + 'b')
-            t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
+                t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
+            except OSError:
+                var0file = os.path.join(self.out_0d_dir, var + outname + str(lvl) + 'a')
+                t0, v0 = np.loadtxt(fname=var0file, usecols=(0,1), unpack=True)
         return t0, v0
 
     def plot_0d_output(self, var='all'):
