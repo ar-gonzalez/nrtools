@@ -54,6 +54,7 @@ HYDRO = {
     'hrsc_TVD_limiter'            : 'MC2',
     'hrsc_rec_metric'             : '@@',
     'hrsc_flux'                   : '@@',
+    'ExitIfNAN_vars'              : 'grhd_D grhd_Tau grhd_Sx grhd_rho grhd_epsl grhd_vx grhd_p',
     'grhd_C2P'                    : 'p_root',
     'grhd_C2P_NewtonRaphsonTR'    : '1e-9',
     'grhd_C2P_NewtonRaphsonNR'    : '100',
@@ -110,18 +111,18 @@ EVOLUTION = {
 OUTPUT = {
     # output
     '0douttime'                   : '@@',
-    '0doutput'                    : 'alpha ham momx momy momz betax grhd_D grhd_rho hydroa_uesc hydroa_Du hydroa_Db hydroa_Dh hydroa_etot hydroa_Px hydroa_Py hydroa_Pz hydroa_Pux hydroa_Puy hydroa_Puz rpsi4 ipsi4',
-    '1douttime'                   : '@@',
-    '1doutput'                    : 'alpha grhd_rho',
-    '1doutinterpolate'            : 'no',
-    '1doutputall'                 : 'no',
+    '0doutput'                    : 'alpha ham momx grhd_D grhd_rho rpsi4 ipsi4',
+    '#1douttime'                   : '@@',
+    '#1doutput'                    : 'alpha grhd_rho',
+    '#1doutinterpolate'            : 'no',
+    '#1doutputall'                 : 'no',
     '2douttime'                   : '@@',
-    '2doutput'                    : 'alpha bssn_chi grhd_rho ham momx momy momz betax grhd_D grhd_vx grhd_v2 grhd_epsl grhd_p hydroa_uesc hydroa_Du hydroa_Db hydroa_Dh hydroa_etot',
+    '2doutput'                    : 'alpha bssn_chi grhd_rho ham momx grhd_vx grhd_v2 grhd_epsl grhd_p hydroa_uesc hydroa_Du hydroa_Db hydroa_Dh hydroa_etot',
     '2dformat'                    : 'vtk binary float',
     '2doutinterpolate'            : 'no',
     '2doutputr'                   : 'sphere_data',
-    '3douttime'                   :  '@@',
-    '3doutput'                    :  'bssn_chi grhd_rho hydroa_Du hydroa_Db',
+    '#3douttime'                   :  '@@',
+    '#3doutput'                    :  'bssn_chi grhd_rho hydroa_Du hydroa_Db',
 }
 
 BOUNDARY_AND_GAUGE = {
