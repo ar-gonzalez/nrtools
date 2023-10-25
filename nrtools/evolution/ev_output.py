@@ -149,6 +149,8 @@ class Ev_Output():
 
             # Output directories:
             self.out_0d_dir = os.path.join(self.outpath, 'output_0d')
+            if os.path.exists(os.path.join(self.out_0d_dir,'combined')) and os.path.isdir(os.path.join(self.out_0d_dir,'combined')):
+                self.out_0d_dir = os.path.join(self.out_0d_dir,'combined') # for the case of separated output from HAWK
             self.out_1d_dir = os.path.join(self.outpath, 'output_1d')
             self.out_2d_dir = os.path.join(self.outpath, 'output_2d')
             self.out_inv_dir = os.path.join(self.outpath, 'Invariants')
