@@ -255,7 +255,7 @@ class Ev_Parameter_File():
         # ID_HEADER
         self.id_header['EIDdataReader_exe'] = initial_data.id_exe
         self.id_header['EIDdataReader_checkpoint'] = os.path.join(os.path.join(initial_data.ou.outpath,initial_data.ou.hr_path),'checkpoint.dat')
-        eos = initial_data.parfile.pardic['NS_EoS_description']#[-3:]
+        eos = initial_data.parfile.pardic['NS_EoS_description'].strip()#[-3:]
         self.id_header['eos_tab_file'] = os.path.join(eos_tab_path,'eos_'+eos.lower()+'.pwp')
         if os.path.exists(self.id_header['eos_tab_file'])==False:
             print('ERROR: EOS tab file not found!')
