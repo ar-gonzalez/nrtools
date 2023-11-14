@@ -130,12 +130,19 @@ class Parameter_File():
             parfile = os.path.join(self.path,[i for i in os.listdir(self.path) if i.endswith('.par')][0])
             with open(parfile) as f:
                 for line in f:
-                    key, value = line.strip().split(' = ')
-                    try:
-                        float(value)
-                    except ValueError:
-                        value = value.split('->')[-1]
-                    PARDICR[key] = value
+                    if line.startswith('#') or len(line)==0:
+                        continue
+                    else:
+                        try:
+                            key, value = line.strip().split('=')
+                            try:
+                                float(value)
+                            except ValueError:
+                                value = value.split('->')[-1]
+                            key = key.strip()
+                            PARDICR[key] = value
+                        except:
+                            print('skip..')
             self.pardic = PARDICR
         else:
             self.user_params = params
