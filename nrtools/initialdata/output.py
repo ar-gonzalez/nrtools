@@ -130,6 +130,8 @@ class Output():
             M_NS = 1.4199062240028333 #grav mass
         elif eos=='MS1b':
             M_NS = 1.4611674103103354
+        elif eos=='ALF2':
+            M_NS = 1.441691281566144
         else:
             M_NS = 0
             print("===> Error: EoS not recognized, please add to /nrtools/initialdata/output.py")

@@ -172,6 +172,12 @@ class Parameter_File():
             PARDIC['NS_EoS_K0'] = '[8.94989354e-02]'
             PARDIC['NS_EoS_Gamma'] = '[1.3569e+00, 3.4560e+00, 3.0110e+00, 1.4250e+00]'
             PARDIC['NS_EoS_rho0_th'] = '[0.00000000e+00, 1.8401e-04, 8.1147e-04, 1.6191e-03]'
+        elif params['eos'] == 'ALF2':
+            PARDIC['NS_EoS_description'] = 'ALF2'
+            PARDIC['NS_EoS_type'] = 'piecewise_polytropic'
+            PARDIC['NS_EoS_K0'] = '[8.9493e-02]'
+            PARDIC['NS_EoS_Gamma'] = '[1.3569e+00, 4.0700e+00, 2.4110e+00, 1.8900e+00]'
+            PARDIC['NS_EoS_rho0_th'] = '[0.00000000e+00, 3.1534e-04, 8.1147e-04, 1.6191e-03]'           
         else:
             print('===> EoS not valid !')
         
