@@ -135,6 +135,8 @@ class Parameter_File():
                     else:
                         try:
                             key, value = line.strip().split('=')
+                            if '#' in value:
+                                value = value.split('#')[0].strip()
                             try:
                                 float(value)
                             except ValueError:
