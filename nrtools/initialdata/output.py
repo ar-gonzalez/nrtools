@@ -28,11 +28,18 @@ class Output():
             self.id_outdir = id_outdir
             self.verbose = verbose
             if status=='Done':
-                self.hr_path = sorted(os.listdir(self.id_outdir))[-1] # Path to highest resolution ID
-                if self.hr_path.endswith("_01"):
-                    self.sr_path = sorted(os.listdir(self.id_outdir))[-3]
-                else:
-                    self.sr_path = sorted(os.listdir(self.id_outdir))[-2] # Path to second highest resolution ID
+                highr = 0
+                for ir,reso in enumerate(sorted(os.listdir(self.id_outdir))):
+                    rr = float(reso.split('_')[7].split('x')[0])
+                    if float(rr)>highr:
+                        highr = rr
+                        ihighr = ir
+                    elif rr==highr:
+                        if reso.endswith('_01'):
+                            highr = rr
+                            ihighr = ir
+                self.hr_path = sorted(os.listdir(self.id_outdir))[ihighr] # Path to highest resolution ID
+                self.sr_path = sorted(os.listdir(self.id_outdir))[ihighr-1] # Path to second highest resolution ID
                 self.outpath = os.path.join(self.path,self.simname+'_00')
                 self.txt_path = os.path.join(os.path.join(self.outpath,self.hr_path),'BHNS_properties.txt')
                 self.read_md()
