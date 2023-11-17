@@ -97,6 +97,8 @@ class Initial_Data():
         self.bashname = bashname
         bss.write('#!/bin/bash \n')
         bss.write('#SBATCH --partition '+partition+' \n')
+        if cluster == 'DRACO':
+            bss.write('#SBATCH --qos=multi-node \n')
         bss.write('#SBATCH -J '+self.simname+'\n')
         bss.write('#SBATCH -o '+os.path.join(self.simpath,'out.log')+' \n')
         bss.write('#SBATCH -N 1 \n')

@@ -94,6 +94,8 @@ class Evolution():
         self.bashname = jobsub
         bss.write('#!/bin/bash \n')
         bss.write('#SBATCH --partition '+partition+' \n')
+        if cluster == 'DRACO':
+            bss.write('#SBATCH --qos=multi-node \n')
         bss.write('#SBATCH -J '+self.evname+'\n')
         bss.write('#SBATCH -o bam_out.log \n')
         bss.write('#SBATCH -e error.err \n')
