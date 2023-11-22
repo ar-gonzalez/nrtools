@@ -92,11 +92,12 @@ class Evolution():
 
         bss = open(os.path.join(self.path,jobsub), 'a')
         self.bashname = jobsub
+        whole_name = self.idata.simname+'-'+self.evname
         bss.write('#!/bin/bash \n')
         bss.write('#SBATCH --partition '+partition+' \n')
         if cluster == 'DRACO':
             bss.write('#SBATCH --qos=multi-node \n')
-        bss.write('#SBATCH -J '+self.evname+'\n')
+        bss.write('#SBATCH -J '+whole_name+'\n')
         bss.write('#SBATCH -o bam_out.log \n')
         bss.write('#SBATCH -e error.err \n')
         bss.write('#SBATCH --nodes 4 \n')
