@@ -174,4 +174,4 @@ def lin_momentum_from_wvf(h, doth, t, u, lmmodes):
         Py_all += Py[(l,m)]
         P_all  += P[(l,m)]
 
-    return Px, Py, Pz, P
+    return Px_all, Py_all, Pz_all, P_all
