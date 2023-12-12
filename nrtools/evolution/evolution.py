@@ -39,6 +39,13 @@ class Evolution():
         self.parfile = Ev_Parameter_File(self.path, self.ev_path, self.idata, resolution, lmax, lmax2, self.flux)
         self.ou = Ev_Output(self.path, self.status, lmax)
 
+        core_out = os.path.join(self.path,'CoReDB')
+        try:
+            os.mkdir(core_out)
+        except FileExistsError:
+            print('Directory exists: ',core_out)
+        self.core_out = core_out
+
     def check_status(self):
         ev_log = [i for i in os.listdir(self.path) if i.endswith('out.log')]
         if len(ev_log)==0:
@@ -190,11 +197,7 @@ class Evolution():
         mbh, mns, _ = id_output.get_msun_masses()
         wm = self.get_core_wm_object()
 
-        core_out = os.path.join(self.path,'CoReDB')
-        try:
-            os.mkdir(core_out)
-        except FileExistsError:
-            print('Directory exists: ',core_out)
+        core_out = self.core_out
             
         # Get waveforms
         for r in wm.radii:
@@ -207,9 +210,9 @@ class Evolution():
         # Get energetics
         madm, jadm = id_output.get_ADM_qtys()
         wm.energetics(mbh, mns, madm, jadm, path_out = core_out)
-        self.core_out = core_out
 
     def get_lin_momentum(self):
+        self.get_core_data()
         wm = self.get_core_wm_object()
         h     = {}
         h_dot = {}
