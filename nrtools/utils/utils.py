@@ -4,6 +4,7 @@ import math
 from scipy.signal import tukey
 from watpy.wave.wave import rinf_str_to_float
 import re
+from scipy import integrate 
 
 # Constants
 Msun_sec = 4.925794970773135e-06
@@ -100,3 +101,77 @@ def windowing(h, alpha=0.1):
    wfact  = np.mean(window**2) 
    window = np.array(window) 
    return h*window, wfact
+
+# multipolar coefficients to get energetics from wvf
+def mc_f(l,m):
+    return np.sqrt(l*(l+1) - m*(m+1))
+def mc_a(l,m):
+    return np.sqrt((l-m)*(l+m+1))/(l*(l+1))
+def mc_b(l,m):
+    return np.sqrt(((l-2)*(l+2)*(l+m)*(l+m-1))/((2*l-1)*(2*l+1)))/(2*l)
+def mc_c(l,m):
+    return 2*m/(l*(l+1))
+def mc_d(l,m):
+    return np.sqrt(((l-2)*(l+2)*(l-m)*(l+m))/((2*l-1)*(2*l+1)))/l
+
+
+def lin_momentum_from_wvf(h, doth, t, u, lmmodes):
+    # From https://arxiv.org/pdf/0912.1285.pdf
+    #* h[(l,m)]     : multipolar strain 
+    #* doth[(l,m)]  : time-derivative of multipolar strain
+    #* t            : time array
+    #* lmmodes      : (l,m) indexes
+
+    oo16pi  = 1./(16*np.pi)
+
+    lmodes = [lm[0] for lm in lmmodes]
+    mmodes = [lm[1] for lm in lmmodes]
+    lmin = min(lmodes)
+    if lmin < 2:
+        raise ValueError("l>2")
+    if lmin != 2:
+        print("Warning: lmin > 2")
+        
+    mnfactor = np.ones_like(mmodes)
+
+    dotP, P = {}, {}
+    dotPz, dotPy, dotPx = {}, {}, {}
+    Pz, Py, Px = {}, {}, {}
+
+    dotP_all, P_all = np.zeros_like(t), np.zeros_like(t)
+    dotPz_all, dotPy_all, dotPx_all = np.zeros_like(t), np.zeros_like(t), np.zeros_like(t)
+    Pz_all, Py_all, Px_all = np.zeros_like(t), np.zeros_like(t), np.zeros_like(t)
+
+    for k, (l,m) in enumerate(lmmodes):
+        fact = mnfactor[k] * oo16pi
+        dothlm1   = doth[(l,m+1)]   if (l,m+1)   in doth else 0*h[(l,m)]
+        dothl_1m1 = doth[(l-1,m+1)] if (l-1,m+1) in doth else 0*h[(l,m)]
+        dothl1m1  = doth[(l+1,m+1)] if (l+1,m+1) in doth else 0*h[(l,m)]
+        dotl_1m   = doth[(l-1,m)]   if (l-1,m)   in doth else 0*h[(l,m)]
+        dothl1m   = doth[(l+1,m)]   if (l+1,m)   in doth else 0*h[(l,m)]
+        
+        dotPxiy = 2.0 * fact * doth[(l,m)] * \
+            (mc_a(l,m) * np.conj(dothlm1) + mc_b(l,-m) * np.conj(dothl_1m1) - mc_b(l+1,m+1) * np.conj(dothl1m1))
+        dotPy[(l,m)] = np.imag(dotPxiy)
+        dotPx[(l,m)] = np.real(dotPxiy)
+        dotPz[(l,m)] = fact * np.imag( doth[(l,m)] * \
+            (mc_c(l,m) * np.conj(doth[(l,m)]) + mc_d(l,m) * np.conj(dotl_1m) + mc_d(l+1,m) * np.conj(dothl1m)) )
+
+        dotP[(l,m)] = np.sqrt(dotPx[(l,m)]**2 + dotPy[(l,m)]**2 + dotPz[(l,m)]**2)
+
+        Pz[(l,m)] = integrate.cumtrapz(dotPz[(l,m)],t,initial=0)
+        Py[(l,m)] = integrate.cumtrapz(dotPy[(l,m)],t,initial=0)
+        Px[(l,m)] = integrate.cumtrapz(dotPx[(l,m)],t,initial=0)
+        P[(l,m)]  = integrate.cumtrapz(dotP[(l,m)],t,initial=0)
+
+        dotPz_all += dotPz[(l,m)]
+        dotPy_all += dotPy[(l,m)]
+        dotPx_all += dotPx[(l,m)]
+        dotP_all  += dotP[(l,m)]
+
+        Pz_all += Pz[(l,m)]
+        Px_all += Px[(l,m)]
+        Py_all += Py[(l,m)]
+        P_all  += P[(l,m)]
+
+    return Px, Py, Pz, P

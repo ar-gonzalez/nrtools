@@ -2,6 +2,9 @@ import os
 from .ev_parfile import *
 from .ev_output import *
 from ..initialdata.output import *
+from ..utils.utils import lin_momentum_from_wvf
+from watpy.utils.num import diff1
+from watpy.wave.wave import write_headstr, rinf_float_to_str
 
 def ev_folder_parser(folder_name):
     pars = folder_name.split('_')
@@ -168,18 +171,24 @@ class Evolution():
         submitjob = 'qsub ' + os.path.join(self.path,self.bashname)
         os.system(submitjob)
 
-    def get_core_data(self):
+    def get_core_wm_object(self):
         ev_output = self.ou
         id_output = self.idata.ou
             
-        mbh, mns, mtot = id_output.get_msun_masses()
+        _, _, mtot = id_output.get_msun_masses()
         _, Momg22 = id_output.get_gw_freqs()
-        #wm = ev_output.get_mp_Rpsi4(mtot,Momg22)
         f0 = Momg22 / (2*np.pi) / mtot 
         dfiles = [os.path.split(x)[1] for x in glob.glob('{}/{}'.format(ev_output.out_inv_dir,'Rpsi4mode??_r*.l0'))]
         wm = mwaves(path = ev_output.out_inv_dir, code = 'bam', filenames = dfiles, 
             mass = mtot, f0 = f0,
             ignore_negative_m=True)
+        return wm
+
+    def get_core_data(self):
+        id_output = self.idata.ou
+            
+        mbh, mns, _ = id_output.get_msun_masses()
+        wm = self.get_core_wm_object()
 
         core_out = os.path.join(self.path,'CoReDB')
         try:
@@ -199,6 +208,31 @@ class Evolution():
         madm, jadm = id_output.get_ADM_qtys()
         wm.energetics(mbh, mns, madm, jadm, path_out = core_out)
         self.core_out = core_out
+
+    def get_lin_momentum(self):
+        wm = self.get_core_wm_object()
+        h     = {}
+        h_dot = {}
+        u     = {}
+
+        for rad in wm.radii:
+            for lm in wm.modes: 
+                w         = self.get(l=lm[0], m=lm[1], r=rad)
+                t         = w.time
+                u[lm]     = w.time_ret()
+                h[lm]     = w.h
+                h_dot[lm] = diff1(t, h[lm])
+            
+            Px, Py, Pz, P = lin_momentum_from_wvf(h, h_dot, t, u, wm.modes)
+
+            headstr  = write_headstr(rad,wm.mass)
+            headstr += "Px:0 Py:1 Pz:2 P:3 t:4"
+            data = np.c_[Px, Py, Pz,
+                             P, t]
+            rad_str = rinf_float_to_str(rad)
+            fname = "P_r"+rad_str+".txt"
+            np.savetxt('{}/{}'.format(self.core_out,fname), data, header=headstr)
+
 
     def output_metadata(self, author='alejandra'):
         '''
