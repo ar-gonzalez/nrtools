@@ -217,18 +217,16 @@ class Evolution():
 
         for rad in wm.radii:
             for lm in wm.modes: 
-                w         = self.get(l=lm[0], m=lm[1], r=rad)
+                w         = wm.get(l=lm[0], m=lm[1], r=rad)
                 t         = w.time
                 u[lm]     = w.time_ret()
                 h[lm]     = w.h
                 h_dot[lm] = diff1(t, h[lm])
             
             Px, Py, Pz, P = lin_momentum_from_wvf(h, h_dot, t, u, wm.modes)
-
             headstr  = write_headstr(rad,wm.mass)
             headstr += "Px:0 Py:1 Pz:2 P:3 t:4"
-            data = np.c_[Px, Py, Pz,
-                             P, t]
+            data = np.c_[Px, Py, Pz, P, t]
             rad_str = rinf_float_to_str(rad)
             fname = "P_r"+rad_str+".txt"
             np.savetxt('{}/{}'.format(self.core_out,fname), data, header=headstr)
