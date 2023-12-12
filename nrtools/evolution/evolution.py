@@ -212,7 +212,6 @@ class Evolution():
         wm.energetics(mbh, mns, madm, jadm, path_out = core_out)
 
     def get_lin_momentum(self):
-        self.get_core_data()
         wm = self.get_core_wm_object()
         h     = {}
         h_dot = {}
