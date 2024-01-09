@@ -79,6 +79,12 @@ def nu_to_q(nu):
 def q_to_nu(q):
     return q/((1.+q)*(1.+q))
 
+def get_kappa2t(lam,m1,m2):
+    q = m1/m2
+    nu = q_to_nu(q)
+    lamtilde = (8/13)*(1+7*nu-31*nu*nu-np.sqrt(1-4*nu)*(1+9*nu-11*nu*nu))*lam
+    return 3*lamtilde / 16    
+
 def get_rad(filename):
     name = re.match(r'R(\w+)_l(\d+)_m(\w+)_r(\w+).txt', filename)
     try:
