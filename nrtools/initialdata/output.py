@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from ..utils.utils import get_id_gw_frequency_Hz, get_id_gw_frequency_Momega22
+from ..utils.utils import get_id_gw_frequency_Hz, get_id_gw_frequency_Momega22, get_kappa2t
 
 ########################################
 # ID Output class
@@ -133,18 +133,60 @@ class Output():
         For a NS with M_b = 1.6
         '''
         eos = self.id_dic['NS_EoS_description']
+        mb = float(self.id_dic['NS_baryonic_mass_current'])
         if eos=='SLy':
-            M_NS = 1.4199062240028333 #grav mass
+            if mb>1.5: # for mb=1.6
+                M_NS = 1.4199062240028333
+            else: # for mb=1.4
+                M_NS = 1.259943000559463
         elif eos=='MS1b':
-            M_NS = 1.4611674103103354
+            if mb>1.5: # for mb=1.6
+                M_NS = 1.4611674103103354
+            else: # for mb=1.4
+                M_NS = 0
         elif eos=='ALF2':
-            M_NS = 1.441691281566144
+            if mb>1.5: # for mb=1.6
+                M_NS = 1.441691281566144
+            else: # for mb=1.4
+                M_NS = 0
         else:
             M_NS = 0
             print("===> Error: EoS not recognized, please add to /nrtools/initialdata/output.py")
 
         M_BH = float(self.id_dic['BH_Christodoulou_mass_current'])
         return M_BH, M_NS, M_BH + M_NS
+
+    def get_tidal_params(self):
+        eos = self.id_dic['NS_EoS_description']
+        mb = float(self.id_dic['NS_baryonic_mass_current'])
+        mbh, mg, _ = self.get_msun_masses()
+        if eos=='SLy':
+            if mb>1.5: # for mb=1.6
+                lam = 276.48036295542073
+                kappa = get_kappa2t(lam,mbh,mg)
+            else: # for mb=1.4
+                lam = 599.2794774456522
+                kappa = get_kappa2t(lam,mbh,mg)
+        elif eos=='MS1b':
+            if mb>1.5: # for mb=1.6
+                lam = 1006.2885125921738
+                kappa = get_kappa2t(lam,mbh,mg)
+            else: # for mb=1.4
+                lam = 0
+                kappa = 0
+        elif eos=='ALF2':
+            if mb>1.5: # for mb=1.6
+                lam = 493.7973627693258
+                kappa = get_kappa2t(lam,mbh,mg)
+            else: # for mb=1.4
+                lam = 0
+                kappa = 0
+        else:
+            lam = 0
+            kappa = 0
+            print("===> Error: EoS not recognized, please add to /nrtools/initialdata/output.py")
+        
+        return lam, kappa
 
     def get_ADM_qtys(self):
         '''
