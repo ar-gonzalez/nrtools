@@ -79,9 +79,9 @@ class Initial_Data():
             memcpu = 'MaxMemPerCPU'
             modules = ['compiler/gcc/10.2.0','compiler/intel/2020-Update2']
         elif cluster == 'DRACO':
-            partition = 'standard' # compute, standard
-            cpus = '36'
-            time = '3-0:00:00' # inf, 3-0:00:00
+            partition = 'long' #'standard' # compute, standard
+            cpus = '48' #'36'
+            time = '14-0:00:00' # inf, 3-0:00:00
             memcpu = '2G'
             modules = ['use.intel-oneapi','icc/latest','mkl/latest','mpi/openmpi/4.1.1']
         elif cluster == 'PAF':
