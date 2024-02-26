@@ -5,9 +5,21 @@ from scipy.signal import tukey
 from watpy.wave.wave import rinf_str_to_float
 import re
 from scipy import integrate 
+import csv
 
 # Constants
 Msun_sec = 4.925794970773135e-06
+
+def csv_reader(filename):
+    """
+    Read a CSV file using csv.DictReader
+    """
+    data = [] 
+    with open(filename) as f:
+        reader = csv.DictReader(f, delimiter=',')
+        for line in reader:
+            data.append(line)
+    return data
 
 ## 3PN energy and ang. mom
 # from https://journals.aps.org/prd/pdf/10.1103/PhysRevD.65.124009
