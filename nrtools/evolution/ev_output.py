@@ -163,21 +163,17 @@ class Ev_Output():
         try:
             hfile = os.path.join(self.outpath,'horizon_0')
             time, mass, spinx, spiny, spinz, spin = np.loadtxt(fname=hfile, comments='#', usecols=(0,4,5,6,7,8), unpack=True)
-            N = 50
+            N = 10
             t = np.mean(time[-N:])
-            mbh = np.mean(mass[-N:])
+            mbh = np.mean(mass[-N:]) # this is irreducible
             sx = np.mean(spinx[-N:])
             sy = np.mean(spiny[-N:])
             sz = np.mean(spinz[-N:])
             s = np.mean(spin[-N:])
-            '''
-            t = time[-1]
-            mbh = mass[-1]
-            sx = spinx[-1]
-            sy = spiny[-1]
-            sz = spinz[-1]
-            s = spin[-1]
-            '''
+
+            # get the final mass as Christodolou mass
+            mbh = np.sqrt( mbh*mbh + s*s/(4*mbh*mbh) )
+            
         except IndexError:
             t, mbh, sx, sy, sz, s = None
             print("===> Error: Time integration hasn't started yet")
