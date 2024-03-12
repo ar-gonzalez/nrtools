@@ -171,16 +171,22 @@ class Output():
             if mb>1.5: # for mb=1.6
                 lam = 1006.2885125921738
                 kappa = get_kappa2t(lam,mbh,mg)
-            else: # for mb=1.4
-                lam = 0
-                kappa = 0
+            elif mb>1.39: # for mb=1.4
+                lam = 1931.501612858557
+                kappa = get_kappa2t(lam,mbh,mg)
+            elif mb<1.36: # for mb=1.35
+                lam = 2312.470950148368
+                kappa = get_kappa2t(lam,mbh,mg)
         elif eos=='ALF2':
             if mb>1.5: # for mb=1.6
                 lam = 493.7973627693258
                 kappa = get_kappa2t(lam,mbh,mg)
-            else: # for mb=1.4
-                lam = 0
+            elif mb>1.39: # for mb=1.4
+                lam = 1006.3969784624323
                 kappa = 0
+            elif mb<1.36: # for mb=1.35
+                lam = 1206.8906420652897
+                kappa = get_kappa2t(lam,mbh,mg)
         else:
             lam = 0
             kappa = 0
