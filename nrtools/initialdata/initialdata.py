@@ -77,7 +77,7 @@ class Initial_Data():
             cpus = '32'
             time = '8-0:00:00'
             memcpu = 'MaxMemPerCPU'
-            modules = ['compiler/gcc/10.2.0','compiler/intel/2020-Update2']
+            modules = ['intel/oneapi/2023.2.0','icc/latest','mkl/latest']
         elif cluster == 'DRACO':
             partition = 'long' #'standard' # compute, standard
             cpus = '48' #'36'
@@ -108,7 +108,7 @@ class Initial_Data():
         bss.write('#SBATCH --mail-type=begin \n')
         bss.write('#SBATCH --mail-type=end \n')
         bss.write('#SBATCH --cpus-per-task='+cpus+' \n')
-        bss.write('#SBATCH  --mem-per-cpu='+memcpu+' \n\n')
+        bss.write('##SBATCH  --mem-per-cpu='+memcpu+' \n\n')
         bss.write('export OUTDIR='+self.simpath+' \n')
         bss.write('export PAR='+self.simname+' \n')
         bss.write('export ELLIPTICA='+self.id_exe+' \n')

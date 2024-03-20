@@ -91,7 +91,7 @@ class Evolution():
             partition = 'b_standard'
             time = '8-0:00:00'
             memcpu = 'MaxMemPerCPU'
-            modules = ['mpi/intel/2020-Update2']
+            modules = ['intel/oneapi/2024.0.1','mpi/latest']
         elif cluster == 'DRACO':
             partition = 'standard' # compute, standard
             time = '3-0:00:00' # inf, 3-0:00:00
@@ -118,7 +118,7 @@ class Evolution():
         bss.write('#SBATCH --mail-type=end \n')
         bss.write('#SBATCH --cpus-per-task=6 \n')
         bss.write('#SBATCH  --exclusive \n')
-        bss.write('#SBATCH  --mem-per-cpu='+memcpu+' \n\n')
+        bss.write('##SBATCH  --mem-per-cpu='+memcpu+' \n\n')
         bss.write('export OMP_NUM_THREADS=6 \n')
         bss.write('export I_MPI_DEBUG=5 \n')
         bss.write('export KMP_AFFINITY=verbose,granularity=fine,scatter \n\n')
