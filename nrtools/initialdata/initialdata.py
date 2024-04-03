@@ -76,7 +76,7 @@ class Initial_Data():
             partition = 's_standard'
             cpus = '32'
             time = '8-0:00:00'
-            memcpu = 'MaxMemPerCPU'
+            memcpu = '3G'
             modules = ['intel/oneapi/2023.2.0','icc/latest','mkl/latest']
         elif cluster == 'DRACO':
             partition = 'long' #'standard' # compute, standard

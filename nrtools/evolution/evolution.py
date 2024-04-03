@@ -91,7 +91,7 @@ class Evolution():
             partition = 'b_standard'
             time = '8-0:00:00'
             memcpu = 'MaxMemPerCPU'
-            modules = ['intel/oneapi/2024.0.1','mpi/latest']
+            modules = ['intel/oneapi/2024.0.1','mpi/latest','mpi/openmpi/5.0.2/gcc']
         elif cluster == 'DRACO':
             partition = 'standard' # compute, standard
             time = '3-0:00:00' # inf, 3-0:00:00
