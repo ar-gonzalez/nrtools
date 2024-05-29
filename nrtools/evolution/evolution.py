@@ -97,6 +97,11 @@ class Evolution():
             time = '3-0:00:00' # inf, 3-0:00:00
             memcpu = '2G'
             modules = ['use.intel-oneapi','mpi/latest']
+        elif cluster == 'LRZ':
+            partition = 'micro' 
+            time = '20:00:00'  
+            memcpu = '90G'
+            modules = None
         else:
             print('ERROR: Unknown cluster name. Currently available: ARA, DRACO.')
 
@@ -118,17 +123,22 @@ class Evolution():
         bss.write('#SBATCH --mail-type=end \n')
         bss.write('#SBATCH --cpus-per-task=6 \n')
         bss.write('#SBATCH  --exclusive \n')
+        if cluster == 'LRZ':
+            bss.write('#SBATCH --no-requeue \n')
+            bss.write('#SBATCH --get-user-env \n')
+            bss.write('#SBATCH --account=pn39go \n')
         bss.write('##SBATCH  --mem-per-cpu='+memcpu+' \n\n')
         bss.write('export OMP_NUM_THREADS=6 \n')
         bss.write('export I_MPI_DEBUG=5 \n')
         bss.write('export KMP_AFFINITY=verbose,granularity=fine,scatter \n\n')
-        bss.write('module purge \n')
 
-        for mod in modules:
-            if mod == modules[-1]:
-                bss.write('module load '+mod+' \n\n')
-            else:
-                bss.write('module load '+mod+' \n')
+        if cluster!='LRZ':
+            bss.write('module purge \n')
+            for mod in modules:
+                if mod == modules[-1]:
+                    bss.write('module load '+mod+' \n\n')
+                else:
+                    bss.write('module load '+mod+' \n')
 
         exe_file = os.path.join(self.ev_path,'exe/bam_latest')
 
