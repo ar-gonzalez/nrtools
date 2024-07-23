@@ -84,14 +84,14 @@ class Initial_Data():
             time = '14-0:00:00' # inf, 3-0:00:00
             memcpu = '2G'
             modules = ['use.intel-oneapi','icc/latest','mkl/latest','mpi/openmpi/4.1.1']
-        elif cluster == 'PAF':
-            partition = 'workstation' # pool, check if they are not down!
-            cpus = '6'
-            time = '14-0:00:00' # infinite 
-            memcpu = '2G'
-            modules = ['intel-2020.02']
+        elif cluster == 'LRZ':
+            partition = 'micro' 
+            cpus = '48'
+            time = '20:00:00'  
+            memcpu = '90G'
+            modules = ['gcc/11.2.0']
         else:
-            print('ERROR: Unknown cluster name. Currently available: ARA, DRACO, or PAF')
+            print('ERROR: Unknown cluster name. Currently available: ARA, DRACO, or LRZ')
 
         bss = open(os.path.join(self.simpath,bashname), 'a')
         self.bashname = bashname
@@ -107,13 +107,19 @@ class Initial_Data():
         bss.write('#SBATCH --mail-user=alejandra.gonzalez@uni-jena.de \n')
         bss.write('#SBATCH --mail-type=begin \n')
         bss.write('#SBATCH --mail-type=end \n')
+        if cluster == 'LRZ':
+            bss.write('#SBATCH --no-requeue \n')
+            bss.write('#SBATCH --get-user-env \n')
+            bss.write('#SBATCH --account=pn39go \n')
         bss.write('#SBATCH --cpus-per-task='+cpus+' \n')
         bss.write('##SBATCH  --mem-per-cpu='+memcpu+' \n\n')
         bss.write('export OUTDIR='+self.simpath+' \n')
         bss.write('export PAR='+self.simname+' \n')
         bss.write('export ELLIPTICA='+self.id_exe+' \n')
         bss.write('export OMP_NUM_THREADS='+cpus+' \n\n')
-        bss.write('module purge \n')
+
+        if cluster!='LRZ':
+            bss.write('module purge \n')
         
         for mod in modules:
             if mod == modules[-1]:
