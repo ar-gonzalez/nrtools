@@ -227,8 +227,8 @@ class Evolution():
             
             Px, Py, Pz, P = lin_momentum_from_wvf(h, h_dot, t, u, wm.modes)
             headstr  = write_headstr(rad,wm.mass)
-            headstr += "Px:0 Py:1 Pz:2 P:3 t:4"
-            data = np.c_[Px, Py, Pz, P, t]
+            headstr += "Px:0 Py:1 Pz:2 P:3 t:4 u:5"
+            data = np.c_[Px, Py, Pz, P, t, w.time_ret()]
             rad_str = rinf_float_to_str(rad)
             fname = "P_r"+rad_str+".txt"
             np.savetxt('{}/{}'.format(self.core_out,fname), data, header=headstr)
