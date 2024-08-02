@@ -132,6 +132,7 @@ class Output():
         Mtot: total binary mass
         For a NS with M_b = 1.6
         '''
+        '''
         eos = self.id_dic['NS_EoS_description']
         mb = float(self.id_dic['NS_baryonic_mass_current'])
         if eos=='SLy':
@@ -152,8 +153,9 @@ class Output():
         else:
             M_NS = 0
             print("===> Error: EoS not recognized, please add to /nrtools/initialdata/output.py")
-
+        '''
         M_BH = float(self.id_dic['BH_Christodoulou_mass_current'])
+        M_NS = float(self.id_dic['NS_TOV_ADM_mass'])
         return M_BH, M_NS, M_BH + M_NS
 
     def get_tidal_params(self):
