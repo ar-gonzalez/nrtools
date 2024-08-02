@@ -275,7 +275,9 @@ class Ev_Parameter_File():
             self.hydro['hrsc_rec_metric'] = 'LAG6'
             self.hydro['hrsc_flux']  = 'LLF'
         elif flux=='EFL':
-            self.hydro['hrsc_rec'] = 'CENO3'
+            self.id_header['eos'] = 'pwphot'
+            self.id_header['eos_Gamma'] = '1.75'
+            self.hydro['hrsc_rec'] = 'WENOZ'
             self.hydro['hrsc_rec_metric'] = 'LAG4'
             self.hydro['hrsc_flux']  = 'HOEV2'
             self.hydro = {**self.hydro, **self.entropy_viscosity}
@@ -289,6 +291,7 @@ class Ev_Parameter_File():
         self.output['2douttime'] = grid_params['douttime2']
         self.output['3douttime'] = grid_params['douttime2']*4
         if flux=='EFL':
+            self.output['2doutput'] = self.output['#2doutput']
             self.output['2doutput'] += ' grhd_entro grhd_viscD' 
 
         # OTHERS
