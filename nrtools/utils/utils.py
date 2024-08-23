@@ -10,6 +10,22 @@ import csv
 # Constants
 Msun_sec = 4.925794970773135e-06
 
+def float_to_latex_sci(f, precision=1):
+    """
+    Convert a float to LaTeX scientific notation.
+    
+    :param f: The float number to convert.
+    :param precision: Number of decimal places.
+    :return: A string representing the float in LaTeX scientific notation.
+    """
+    if f == 0:
+        return f'0'
+    
+    exponent = int(np.floor(np.log10(abs(f))))
+    mantissa = round(f / 10**exponent, precision)
+    
+    return f"{mantissa} \\times 10^{{{exponent}}}"
+
 def csv_reader(filename):
     """
     Read a CSV file using csv.DictReader
@@ -193,3 +209,181 @@ def lin_momentum_from_wvf(h, doth, t, u, lmmodes):
         P_all  += P[(l,m)]
 
     return Px_all, Py_all, Pz_all, P_all
+
+##############################################################
+# Compute hp, hc for SXS waveforms (ligic similar to C code)
+##############################################################
+from math import factorial as fact
+from scipy import optimize
+from scipy import interpolate
+KMAX   = 14
+
+def modes_to_k(modes):
+    """
+    Map multipolar (l,m) -> linear index k
+    """
+    return [int(x[0]*(x[0]-1)/2 + x[1]-2) for x in modes]
+
+def k_to_ell(k):
+    LINDEX = [\
+    2,2,\
+    3,3,3,\
+    4,4,4,4,\
+    5,5,5,5,5,\
+    6,6,6,6,6,6,\
+    7,7,7,7,7,7,7,\
+    8,8,8,8,8,8,8,8]
+    return LINDEX[k]
+
+def k_to_emm(k):
+    MINDEX = [\
+    1,2,\
+    1,2,3,\
+    1,2,3,4,\
+    1,2,3,4,5,\
+    1,2,3,4,5,6,\
+    1,2,3,4,5,6,7,\
+    1,2,3,4,5,6,7,8];
+    return MINDEX[k]   
+
+def spinsphericalharm(s, l, m, phi, i):  
+  c = pow(-1.,-s) * np.sqrt( (2.*l+1.)/(4.*np.pi) )
+  dWigner = c * wigner_d_function(l,m,-s,i)
+  rY = np.cos(m*phi) * dWigner
+  iY = np.sin(m*phi) * dWigner
+  return rY + 1j*iY
+
+def wigner_d_function(l,m,s,i):
+  costheta = np.cos(i*0.5)
+  sintheta = np.sin(i*0.5)
+  norm = np.sqrt( (fact(l+m) * fact(l-m) * fact(l+s) * fact(l-s)) )
+  ki = max( 0  , m-s )
+  kf = min( l+m, l-s )
+  dWig = 0.
+  for k in range(int(ki), int(kf)+1):
+    div = 1.0/( fact(k) * fact(l+m-k) * fact(l-s-k) * fact(s-m+k) )
+    dWig = dWig+div*( pow(-1.,k) * pow(costheta,2*l+m-s-2*k) * pow(sintheta,2*k+s-m) )
+  
+  return (norm * dWig)
+
+def get_A_NR(dict, N=0):
+    """
+    Compute the aplitude of the NR waveform, skipping the first N points
+    """
+    r = np.sqrt(dict[N:,1]**2 +  dict[N:,2]**2)
+    return r
+
+def get_p_NR(dict, N=0):
+    """
+    Compute the phase of the NR waveform, skipping the first N points
+    """
+    r = -np.unwrap(np.arctan2(dict[N:,2], dict[N:,1]))
+    return r
+
+def InterpAmpPhase(A, p, t, tnew):
+    """
+    Interpolate Amplitude(t) and phase(t) on a new time array tnew
+    """
+    Af   = interpolate.interp1d(t, A, fill_value='extrapolate')
+    Pf   = interpolate.interp1d(t, p, fill_value='extrapolate')
+    Anew = Af(tnew)
+    Pnew = Pf(tnew)
+    return Anew, Pnew
+
+def ComputeHpHc(d, d_neg, d0, i, prf, activemode):
+    Ylm_d     = {}
+    Ylm_d_neg = {}
+    Ylm_d_0   = {}
+    ellmax    = 2
+    
+    for k in range(0, KMAX):
+        ell = k_to_ell(k)
+        m   = k_to_emm(k)
+        Ylm_d[k]    = spinsphericalharm(-2, ell, m, np.pi/2, i)
+        Ylm_d_neg[k]= spinsphericalharm(-2, ell,-m, np.pi/2, i)
+        
+        ellmax = ell
+    
+    for l in range(2, ellmax+1):
+        Ylm_d_0[l]  = spinsphericalharm(-2, l, 0, 0., i)
+
+    sumr=0 
+    sumi=0
+    # Loop over modes
+    for k in range(0, KMAX): 
+        
+        if (not activemode[k]): 
+            continue
+        Aki    = prf*d[k][0]
+        cosPhi = np.cos(d[k][1])
+        sinPhi = np.sin(d[k][1])
+        sumr   = sumr+ Aki*(cosPhi*np.real(Ylm_d[k]) + sinPhi*np.imag(Ylm_d[k]))
+        sumi   = sumi+ Aki*(cosPhi*np.imag(Ylm_d[k]) - sinPhi*np.real(Ylm_d[k])) 
+          
+	    # add m<0 modes
+        Aki    = prf*d_neg[k][0]
+        cosPhi = np.cos(d_neg[k][1])
+        sinPhi = np.sin(d_neg[k][1])
+        sumr   = sumr+ Aki*(cosPhi*np.real(Ylm_d_neg[k]) + sinPhi*np.imag(Ylm_d_neg[k]))
+        sumi   = sumi+ Aki*(cosPhi*np.imag(Ylm_d_neg[k]) - sinPhi*np.real(Ylm_d_neg[k])) 
+    
+    # M = 0
+    #for l in range(2, ellmax+1):
+    #    if (d0[l] == None):
+    #        continue
+    #    Aki    = prf*d0[l][0]
+    #    cosPhi = np.cos(d0[l][1])
+    #    sinPhi = np.sin(d0[l][1])
+    #    sumr   = sumr+ Aki*(cosPhi*np.real(Ylm_d_0[l]) + sinPhi*np.imag(Ylm_d_0[l]))
+    #    sumi   = sumi+ Aki*(cosPhi*np.imag(Ylm_d_0[l]) - sinPhi*np.real(Ylm_d_0[l]))
+      
+    #h = h+ - i hx
+    hp = sumr
+    hc = -sumi
+    
+    return hp, hc
+
+def ComputeHpHc_SXS(gw_sxs, lmax, i, prf, M, dT, N):
+    d     = {}
+    d_neg = {}
+    d0    = {}
+    Msuns  = 4.925491025543575903411922162094833998e-6
+    # initialize d0 and actmodes:
+    actmodes = np.zeros(KMAX)
+    for l in range(2, k_to_ell(KMAX)+1):
+        d0[l] = None
+    
+    # read all modes in dictionary
+    for ell in range(2, lmax+1):
+        for m in range(-ell, ell+1):
+            if m == 0:
+                continue #skip m = 0 modes
+
+            ylm_str = "Y_l"+str(ell)+"_m"+str(m)+".dat" 
+            gw_ext = gw_sxs["Extrapolated_N4.dir"][ylm_str]
+            A      = get_A_NR(gw_ext, N)
+            p      = get_p_NR(gw_ext, N)
+            t_SI   = np.array(gw_ext[N:,0])*M*Msuns
+            t_new  = np.arange(t_SI[0], t_SI[-1], dT)
+            A, p   = InterpAmpPhase(A,  p,  t_SI, t_new)
+            if m < 0:   #handle cases separately
+                if m==-1:
+                    continue
+                m = -m
+                k           = modes_to_k([[ell, m]])[0]
+                d_neg[k]    = [A, p]
+                actmodes[k] = 1
+
+            elif m > 0:
+                if m==1:
+                    continue
+                if m==2:
+                    k           = modes_to_k([[ell, m]])[0]
+                    d[k]        = [A, p]
+                    actmodes[k] = 1
+            else:
+                d0[ell]     = [A, p]
+    # from dictionary, compute hp,hc
+    hp, hc = ComputeHpHc(d, d_neg, d0, i, prf, actmodes)
+    return t_new, hp, hc
+
