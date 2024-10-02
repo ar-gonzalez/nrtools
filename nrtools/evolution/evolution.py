@@ -274,6 +274,12 @@ class Evolution():
         m1, m2, _ = self.idata.ou.get_msun_masses()
         simkeys['initial_mass1'] = "{:.2f}".format(m1) #self.idata.simname.split('_')[2][1:]
         simkeys['initial_mass2'] = "{:.2f}".format(m2) #self.idata.simname.split('_')[4][1:]
+        simkeys['mass_ratio'] = "{:.2f}".format(m1/m2)
+        lam2, _ = self.idata.ou.get_tidal_params()
+        simkeys['Lambda'] = "{:.2f}".format(lam2)
+        self.idata.ou.read_md()
+        dicc = self.idata.ou.id_dic
+        simkeys['initial_spin'] = "("+dicc['BH_chi_x_current']+','+dicc['BH_chi_y_current']+','+dicc['BH_chi_z_current']+')'
 
         # Evolution Data
         try:
