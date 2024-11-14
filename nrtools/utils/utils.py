@@ -460,13 +460,14 @@ def calc_Lab_tensor(mwave):
         x[l, m] = np.array(h[lm])
         x[l,m,'conj'] = x[l,m].conj()
 
+    y = x
     # Check type of dictionary values and pre-allocate output
-    if isinstance( y[2,2], (float,int,complex) ):
-        L = np.zeros( (3,3), dtype=complex )
-    elif isinstance( y[2,2], np.ndarray ):
-        L = np.zeros( (3,3, len(y[2,2])), dtype=complex )
-    else:
-        print('Dictionary values of handled type; must be float or array')
+#    if isinstance( y[2,2], (float,int,complex) ):
+#        L = np.zeros( (3,3), dtype=complex )
+#    elif isinstance( y[2,2], np.ndarray ):
+    L = np.zeros( (3,3, len(y[2,2])), dtype=complex )
+#    else:
+#        print('Dictionary values of handled type; must be float or array')
 
     # define lambda function for useful coeffs
     c = lambda l,m: np.sqrt( l*(l+1) - m*(m+1) ) if abs(m)<=l else 0
