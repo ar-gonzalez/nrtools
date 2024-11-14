@@ -210,6 +210,56 @@ def lin_momentum_from_wvf(h, doth, t, u, lmmodes):
 
     return Px_all, Py_all, Pz_all, P_all
 
+def rotate_wfarrs_at_all_times( ll,                          # the l of the new multipole (everything should have the same l)
+                                m,                          # the m of the new multipole
+                                mwave,     # dictionary in the format { (l,m): array([domain_values,re,img]) }
+                                euler_alpha_beta_gamma,
+                                ref_orientation = None ):           
+
+    '''
+    Given dictionary of multipoles all with the same l, calculate the roated multipole with (l,mp).
+    Key reference -- arxiv:1012:2879
+    Based on LL,EZH 2018
+    '''
+    # unpack the euler angles
+    alpha,beta,gamma = euler_alpha_beta_gamma
+
+    # Handle the default behavior for the reference orientation
+    if ref_orientation is None:
+        ref_orientation = np.ones(3)
+
+    # Apply the desired reflection for the reference orientation. 
+    # NOTE that this is primarily useful for BAM run which have an atypical coordinate setup if Jz<0
+        
+    gamma *= np.sign( ref_orientation[-1] )
+    alpha *= np.sign( ref_orientation[-1] )
+
+    new_plus  = 0
+    new_cross = 0
+    h = {}
+    for lm in mwave.modes:
+        # See eq A9 of arxiv:1012:2879
+        l,mp = lm
+        if l==ll: # ensure the same l for all multipoles
+            h[lm]   = mwave.h
+            old_wfarr = h[lm]
+
+            d   = wdelement(l,m,mp,alpha,beta,gamma)
+            a,b = d.real,d.imag
+            p   = old_wfarr.real # real part
+            c   = old_wfarr.imag # imag part
+            
+            new_plus  += a*p - b*c
+            new_cross += b*p + a*c
+
+    # Construct the new waveform array
+    real_h = new_plus
+    imag_h = new_cross
+    Amp    = np.sqrt(new_plus**2+new_cross**2)
+    phase  = np.arctan2(new_cross,new_plus) 
+
+    return  real_h, imag_h, Amp, phase
+
 # Given a mwave, calculate the Euler angles corresponding to a co-precessing frame
 # Taken from nrutils_dev, credits to Lionel London
 def calc_coprecessing_angles(mwave,        # mwave object from watpy
@@ -554,6 +604,52 @@ def spline_diff(t,y,k=3,n=1):
           + ( 1j*spline(t,y.imag,k=k).derivative(n=n)(t) if (sum(abs(y.imag))!=0) else 0 )
 
     return ans
+
+# Calculate Widger D-Matrix Element
+def wdelement( ll,         # polar index (eigenvalue) of multipole to be rotated (set of m's for single ll )
+               mp,         # member of {all em for |em|<=l} -- potential projection spaceof m
+               mm,         # member of {all em for |em|<=l} -- the starting space of m
+               alpha,      # -.
+               beta,       #  |- Euler angles for rotation
+               gamma ):    # -'
+
+    #** James Healy 6/18/2012
+    #** wignerDelement
+    #*  calculates an element of the wignerD matrix
+    # Modified by llondon6 in 2012 and 2014
+    # Converted to python by spxll 2016
+    #
+    # This implementation apparently uses the formula given in:
+    # https://en.wikipedia.org/wiki/Wigner_D-matrix
+    #
+    # Specifically, this the formula located here: 
+    # https://wikimedia.org/api/rest_v1/media/math/render/svg/53fd7befce1972763f7f53f5bcf4dd158c324b55
+
+    #
+    if ( (type(alpha) is np.ndarray) and (type(beta) is np.ndarray) and (type(gamma) is np.ndarray) ):
+        alpha,beta,gamma = alpha.astype(float), beta.astype(float), gamma.astype(float)
+    else:
+        alpha,beta,gamma = float(alpha),float(beta),float(gamma)
+
+    coefficient = np.sqrt( fact(ll+mp)*fact(ll-mp)*fact(ll+mm)*fact(ll-mm))*np.exp( 1j*(mp*alpha+mm*gamma) )
+
+    total = 0
+    # find smin
+    if (mm-mp) >= 0      :  smin = mm - mp
+    else                 :  smin = 0
+    # find smax
+    if (ll+mm) > (ll-mp) : smax = ll-mp
+    else                 : smax = ll+mm
+
+    if smin <= smax:
+        for ss in range(smin,smax+1):
+            A = (-1)**(mp-mm+ss)
+            A *= np.cos(beta/2)**(2*ll+mm-mp-2*ss)  *  np.sin(beta/2)**(mp-mm+2*ss)
+            B = fact(ll+mm-ss) * fact(ss) * fact(mp-mm+ss) * fact(ll-mp-ss)
+            total += A/B
+
+    element = coefficient*total
+    return element
 
 ##############################################################
 # Compute hp, hc for SXS waveforms (logic similar to C code)
