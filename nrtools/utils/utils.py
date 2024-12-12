@@ -237,11 +237,13 @@ def rotate_wfarrs_at_all_times( ll,                          # the l of the new 
     new_plus  = 0
     new_cross = 0
     h = {}
+    rad = mwave.radii[-1]
     for lm in mwave.modes:
         # See eq A9 of arxiv:1012:2879
         l,mp = lm
         if l==ll: # ensure the same l for all multipoles
-            h[lm]   = mwave.h
+            w = mwave.get(l=l,m=mp,r=rad)
+            h[lm]   = w.h
             old_wfarr = h[lm]
 
             d   = wdelement(l,m,mp,alpha,beta,gamma)
