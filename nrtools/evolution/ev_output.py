@@ -351,7 +351,7 @@ class Ev_Output():
         '''
         try:
             fnames = [os.path.split(x)[1] for x in glob.glob('{}/{}'.format(self.out_inv_dir,'Rpsi4mode??_r*.l0'))]
-            f0 = Momg22 / 2*np.pi / Mtot
+            f0 = Momg22 / (2*np.pi) / Mtot
             mwave = mwaves(path = self.out_inv_dir, code = 'bam', filenames = fnames, mass = Mtot, f0 = f0, ignore_negative_m=True)
         except IndexError:
             mwave = None
