@@ -194,7 +194,7 @@ class Evolution():
             
         _, _, mtot = id_output.get_msun_masses()
         _, Momg22 = id_output.get_gw_freqs()
-        f0 = Momg22 / (2*np.pi) / mtot 
+        f0 = Momg22 / 2*np.pi / mtot
         dfiles = [os.path.split(x)[1] for x in glob.glob('{}/{}'.format(ev_output.out_inv_dir,'Rpsi4mode??_r*.l0'))]
         wm = mwaves(path = ev_output.out_inv_dir, code = 'bam', filenames = dfiles, 
             mass = mtot, f0 = f0,
