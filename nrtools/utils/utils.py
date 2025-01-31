@@ -123,17 +123,18 @@ def get_rad(filename):
     return rad1
 
 
-def windowing(h, alpha=0.1,taper_beginning=False): 
+def windowing(h, alpha=0.1,taper_beginning=False, taper_end=False): 
    """ Perform windowing with Tukey window on a given strain (time-domain) 
        __________ 
        h    : strain to be tapered 
        alpha : Tukey filter slope parameter. Suggested value: alpha = 1/4/seglen 
-       Only tapers beginning of wvf, to taper both, comment: window[len(h)//2:] = 1.
+       if taper_beginning = taper_end = False it tapers both ends of wvf
    """ 
    window = tukey(len(h), alpha) 
    if taper_beginning:
        window[len(h)//2:] = 1.
-   #window[len(h)//2:] = 1. 
+   elif taper_end:
+       window[:len(h)//2] = 1.
    wfact  = np.mean(window**2) 
    window = np.array(window) 
    return h*window, wfact
