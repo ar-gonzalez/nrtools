@@ -6,6 +6,7 @@ from watpy.wave.wave import rinf_str_to_float
 import re
 from scipy import integrate 
 import csv
+from scipy.linalg import eig, norm
 
 # Constants
 Msun_sec = 4.925794970773135e-06
@@ -213,9 +214,71 @@ def lin_momentum_from_wvf(h, doth, t, u, lmmodes):
 
     return Px_all, Py_all, Pz_all, P_all
 
-def rotate_wfarrs_at_all_times( ll,                          # the l of the new multipole (everything should have the same l)
+##########################################################
+# PRECESSING WVFS TOOLS
+# shamelessly taken from pyart
+# ######################################################## 
+def calc_initial_jframe(J,L, mwave):
+    """
+    Rotate multipoles wlm to an initial frame aligned with the
+    total angular momentum J = L + S
+    J: here the initial ADM angular momentum from the ID
+    L: same as above but for the orb.ang.mom
+    mwave: core mwaves object
+    """
+    #J = dyn['id']['J0']
+    #L = dyn['id']['L0']
+
+    # normalize J and get the rotation angles
+    J_norm = norm(J)
+    JJ     = J/J_norm
+    thetaJ = np.arccos(JJ[2])
+    phiJ   = np.arctan2(JJ[1],JJ[0])
+
+    # euler angles for the rotation
+    beta  = -thetaJ
+    gamma = -phiJ
+
+    # we have one additional dof to set. We choose it such that Lx = 0
+    LL    = rotate3(L, 0, beta, gamma)
+    psiL  = np.arctan2(LL.T[1], LL.T[0])
+    alpha = -psiL
+
+    euler_ang = np.array([alpha, beta, gamma])
+
+    # Rotate the multipoles
+    new_wvf = {}
+    rad = mwave.radii[-1]
+    for lm in mwave.modes:
+        ell,emm = lm
+        # find relevant multipoles to rotate
+        same_ells = [ (l,m) for (l,m) in mwave.modes if l==ell ]
+        u = mwave.get(ell,emm,rad).time_ret()
+        same_ells_dict = { (l,m): [u, np.real(mwave.get(l,m,rad)), np.imag(mwave.get(l,m,rad))] 
+                           for (l,m) in same_ells 
+                        }
+        # perform rotation
+        rotd_hlm = rotate_wfarrs_at_all_times(ell, emm, same_ells_dict, euler_ang)
+        new_wvf[(ell, emm)] = rotd_hlm
+    
+    return new_wvf
+
+def rotate3_axis(vector,theta=0., axis = [0,0,1]):
+    """
+    Rotate a 3 vector around a provided axis of an angle theta
+    """
+    from scipy.spatial.transform import Rotation
+
+    zaxis    = np.array(axis)
+    r        = Rotation.from_rotvec(theta*zaxis)
+    vector_r =r.apply(vector)
+    return vector_r
+
+
+# Given dictionary of multipoles all with the same l, calculate the roated multipole with (l,mp)
+def rotate_wfarrs_at_all_times( l,                          # the l of the new multipole (everything should have the same l)
                                 m,                          # the m of the new multipole
-                                mwave,     # dictionary in the format { (l,m): array([domain_values,re,img]) }
+                                like_l_multipoles_dict,     # dictionary in the format { (l,m): array([domain_values,re,img]) }
                                 euler_alpha_beta_gamma,
                                 ref_orientation = None ):           
 
@@ -239,31 +302,100 @@ def rotate_wfarrs_at_all_times( ll,                          # the l of the new 
 
     new_plus  = 0
     new_cross = 0
-    h = {}
-    rad = mwave.radii[-1]
-    for lm in mwave.modes:
+
+    for lm in like_l_multipoles_dict:
         # See eq A9 of arxiv:1012:2879
         l,mp = lm
-        if l==ll: # ensure the same l for all multipoles
-            w = mwave.get(l=l,m=mp,r=rad)
-            h[lm]   = w.h
-            old_wfarr = h[lm]
+        old_wfarr = like_l_multipoles_dict[lm]
 
-            d   = wdelement(l,m,mp,alpha,beta,gamma)
-            a,b = d.real,d.imag
-            p   = old_wfarr.real # real part
-            c   = old_wfarr.imag # imag part
-            
-            new_plus  += a*p - b*c
-            new_cross += b*p + a*c
+        d   = ut.wdelement(l,m,mp,alpha,beta,gamma)
+        a,b = d.real,d.imag
+        p   = old_wfarr[1]
+        c   = old_wfarr[2]
+
+        new_plus  += a*p - b*c
+        new_cross += b*p + a*c
 
     # Construct the new waveform array
-    real_h = new_plus
-    imag_h = new_cross
-    Amp    = np.sqrt(new_plus**2+new_cross**2)
-    phase  = np.arctan2(new_cross,new_plus) 
 
-    return  real_h, imag_h, Amp, phase
+    return  {'real': new_plus, 
+            'imag' : new_cross, 
+            'A'    : np.sqrt(new_plus**2+new_cross**2),
+            'p'    : np.arctan2(new_cross,new_plus) }
+
+# Rotate a 3 vector using Euler angles
+def rotate3(vector,alpha,beta,gamma,invert=False):
+    '''
+    Rotate a 3 vector using Euler angles under conventions defined at:
+    https://en.wikipedia.org/wiki/Euler_angles
+    https://en.wikipedia.org/wiki/Rotation_matrix
+
+    Science reference: https://arxiv.org/pdf/1110.2965.pdf (Appendix)
+
+    Specifically, the Z1,Y2,Z3 ordering is used: https://wikimedia.org/api/rest_v1/media/math/render/svg/547e522037de6467d948ecf3f7409975fe849d07
+
+    *  alpha represents a rotation around the z axis
+    *  beta represents a rotation around the x' axis
+    *  gamma represents a rotation around the z'' axis
+
+    NOTE that in order to perform the inverse rotation, it is *not* enough to input different rotation angles. One must use the invert=True keyword. 
+    This takes the same angle inputs as the forward rotation, but correctly applies the transposed rotation matricies in the reversed order.
+
+    spxll'18
+    '''
+
+    # Import usefuls
+    from numpy import cos,sin,array,dot,ndarray,vstack
+
+    # Hangle angles as arrays
+    angles_are_arrays = isinstance(alpha,np.ndarray) and isinstance(beta,np.ndarray) and isinstance(gamma,np.ndarray)
+    if angles_are_arrays:
+        # Check for consistent array shapes
+        if not ( alpha.shape == beta.shape == gamma.shape ):
+            # Let the people know and halt
+            print( 'input angles as arrays must have identical array shapes' )
+
+    # Validate input(s)
+    if isinstance(vector,(list,tuple,ndarray)):
+        vector = array(vector)
+    else:
+        print('first input must be iterable compatible 3D vector; please check')
+
+
+    # Rotation around z''
+    Ra = array( [
+                    [cos(alpha),-sin(alpha),0],
+                    [sin(alpha),cos(alpha),0],
+                    [0,0,1]
+        ] )
+
+    # Rotation around y
+    Rb = array( [
+                    [cos(beta),0,sin(beta)],
+                    [0,1,0],
+                    [-sin(beta),0,cos(beta)]
+        ] )
+
+    # Rotation around z
+    Rg = array( [
+                    [cos(gamma),-sin(gamma),0],
+                    [sin(gamma),cos(gamma),0],
+                    [0,0,1]
+        ] )
+
+    # Perform the rotation
+    # ans = (  Ra * ( Rb * ( Rg * vector ) )  )
+    # NOTE that this is the same convention of equation A9 of Boyle et al : https://arxiv.org/pdf/1110.2965.pdf
+    R = dot(  Ra, dot(Rb,Rg)  )
+    if invert: R = R.T
+    ans = dot( R, vector )
+
+    # If angles are arrays, then format the input such that rows in ans correspond to rows in alpha, beta and gamma
+    if angles_are_arrays:
+        ans = vstack( ans ).T
+
+    return ans
+
 
 # Given a mwave, calculate the Euler angles corresponding to a co-precessing frame
 # Taken from nrutils_dev, credits to Lionel London
