@@ -308,7 +308,7 @@ def rotate_wfarrs_at_all_times( l,                          # the l of the new m
         l,mp = lm
         old_wfarr = like_l_multipoles_dict[lm]
 
-        d   = ut.wdelement(l,m,mp,alpha,beta,gamma)
+        d   = wdelement(l,m,mp,alpha,beta,gamma)
         a,b = d.real,d.imag
         p   = old_wfarr[1]
         c   = old_wfarr[2]
