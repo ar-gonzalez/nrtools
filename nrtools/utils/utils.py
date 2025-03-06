@@ -10,6 +10,7 @@ from scipy.linalg import eig, norm
 
 # Constants
 Msun_sec = 4.925794970773135e-06
+Msuns  = 4.925491025543575903411922162094833998e-6
 
 def float_to_latex_sci(f, precision=1):
     """
@@ -218,6 +219,14 @@ def lin_momentum_from_wvf(h, doth, t, u, lmmodes):
 # PRECESSING WVFS TOOLS
 # shamelessly taken from pyart
 # ######################################################## 
+def rotate_in_plane_spins(chiA,chiB,theta=0.):
+    from scipy.spatial.transform import Rotation
+    zaxis   = np.array([0, 0, 1])
+    r       = Rotation.from_rotvec(theta*zaxis)
+    chiA_rot=r.apply(chiA)
+    chiB_rot=r.apply(chiB)
+    return chiA_rot, chiB_rot
+
 def calc_initial_jframe(J,L, mwave):
     """
     Rotate multipoles wlm to an initial frame aligned with the
@@ -965,3 +974,45 @@ def ComputeHpHc_SXS(gw_sxs, lmax, i, prf, M, dT, N):
     hp, hc = ComputeHpHc(d, d_neg, d0, i, prf, actmodes)
     return t_new, hp, hc
 
+def ComputeHpHc_SXS_HM(gw_sxs, lmax, i, prf, M, dT, N):
+    # for BHNS modes: (2,1), (2,2), (3,2), (3,3), (4,4), (5,5)
+    d     = {}
+    d_neg = {}
+    d0    = {}
+    # initialize d0 and actmodes:
+    actmodes = np.zeros(KMAX)
+    for l in range(2, k_to_ell(KMAX)+1):
+        d0[l] = None
+    
+    # read all modes in dictionary
+    for ell in range(2, lmax+1):
+        for m in range(-ell, ell+1):
+            if m == 0:
+                continue #skip m = 0 modes
+
+            ylm_str = "Y_l"+str(ell)+"_m"+str(m)+".dat" 
+            gw_ext = gw_sxs["Extrapolated_N4.dir"][ylm_str]
+            A      = get_A_NR(gw_ext, N)
+            p      = get_p_NR(gw_ext, N)
+            t_SI   = np.array(gw_ext[N:,0])*M*Msuns
+            t_new  = np.arange(t_SI[0], t_SI[-1], dT)
+            A, p   = InterpAmpPhase(A,  p,  t_SI, t_new)
+            if m < 0:   #handle cases separately
+                if( ((ell==3)and(m==-1)) or ((ell==4)and(np.abs(m)<ell)) or ((ell==5)and(np.abs(m)<ell)) ):
+                    continue
+                m = -m
+                k           = modes_to_k([[ell, m]])[0]
+                d_neg[k]    = [A, p]
+                actmodes[k] = 1
+
+            elif m > 0:
+                if( ((ell==3)and(m==1)) or ((ell==4)and(m<ell)) or ((ell==5)and(m<ell)) ):
+                    continue
+                k           = modes_to_k([[ell, m]])[0]
+                d[k]        = [A, p]
+                actmodes[k] = 1
+            else:
+                d0[ell]     = [A, p]
+    # from dictionary, compute hp,hc
+    hp, hc = ComputeHpHc(d, d_neg, d0, i, prf, actmodes)
+    return t_new, hp, hc
