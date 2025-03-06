@@ -254,7 +254,7 @@ def calc_initial_jframe(J,L, mwave):
         # find relevant multipoles to rotate
         same_ells = [ (l,m) for (l,m) in mwave.modes if l==ell ]
         #u = mwave.get(ell,emm,rad).time_ret()
-        same_ells_dict = { (l,m): [mwave.get(l,m,rad).time_ret(), np.real(mwave.get(l,m,rad)), np.imag(mwave.get(l,m,rad))] 
+        same_ells_dict = { (l,m): [mwave.get(l=l,m=m,r=rad).time_ret(), np.real(mwave.get(l=l,m=m,r=rad).h), np.imag(mwave.get(l=l,m=m,r=rad).h)] 
                            for (l,m) in same_ells 
                         }
         # perform rotation
