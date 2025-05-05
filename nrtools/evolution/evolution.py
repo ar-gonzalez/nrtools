@@ -112,6 +112,7 @@ class Evolution():
         bss.write('#SBATCH --partition '+partition+' \n')
         if cluster == 'DRACO':
             bss.write('#SBATCH --qos=multi-node \n')
+            bss.write('#SBATCH --hint=nomultithread \n')
         bss.write('#SBATCH -J '+whole_name+'\n')
         bss.write('#SBATCH -o bam_out.log \n')
         bss.write('#SBATCH -e error.err \n')
@@ -142,7 +143,7 @@ class Evolution():
 
         exe_file = os.path.join(self.ev_path,'exe/bam_latest')
 
-        bss.write('time mpirun -n 16 '+exe_file+' -nt 6 bam_evo.par \n')
+        bss.write('mpirun '+exe_file+' -nt 6 bam_evo.par \n')
         bss.close()
 
     def run_job_slurm(self):
@@ -188,17 +189,20 @@ class Evolution():
         submitjob = 'qsub ' + os.path.join(self.path,self.bashname)
         os.system(submitjob)
 
-    def get_core_wm_object(self):
+    def get_core_wm_object(self,ignore_negative_m=True):
         ev_output = self.ou
         id_output = self.idata.ou
             
         _, _, mtot = id_output.get_msun_masses()
         _, Momg22 = id_output.get_gw_freqs()
         f0 = Momg22 / (2*np.pi) / mtot
-        dfiles = [os.path.split(x)[1] for x in glob.glob('{}/{}'.format(ev_output.out_inv_dir,'Rpsi4mode??_r*.l0'))]
+        if ignore_negative_m:
+            dfiles = [os.path.split(x)[1] for x in glob.glob('{}/{}'.format(ev_output.out_inv_dir,'Rpsi4mode??_r*.l0'))]
+        else:
+            dfiles = [os.path.split(x)[1] for x in glob.glob('{}/{}'.format(ev_output.out_inv_dir,'Rpsi4mode?m?_r*.l0'))]
         wm = mwaves(path = ev_output.out_inv_dir, code = 'bam', filenames = dfiles, 
             mass = mtot, f0 = f0,
-            ignore_negative_m=True)
+            ignore_negative_m=ignore_negative_m)
         return wm
 
     def get_core_data(self):
@@ -220,6 +224,25 @@ class Evolution():
         # Get energetics
         madm, jadm = id_output.get_ADM_qtys()
         wm.energetics(mbh, mns, madm, jadm, path_out = core_out)
+
+    def get_core_data_negm(self):
+        id_output = self.idata.ou
+            
+        mbh, mns, _ = id_output.get_msun_masses()
+        wm = self.get_core_wm_object(ignore_negative_m=False)
+
+        core_out = self.core_out
+   
+        # Get waveforms
+        for r in wm.radii:
+            print(wm.modes)
+            for (l,m) in wm.modes:
+                if m<0:
+                    print("m=",m)
+                    psilm = wm.get(var='Psi4',l=l, m=m, r=r)
+                    psilm.write_to_txt('Psi4', core_out)
+                    hlm = wm.get(l=l, m=m)
+                    hlm.write_to_txt('h', core_out)        
 
     def get_lin_momentum(self):
         wm = self.get_core_wm_object()
