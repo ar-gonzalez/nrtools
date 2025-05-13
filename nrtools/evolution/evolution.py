@@ -205,27 +205,30 @@ class Evolution():
             ignore_negative_m=ignore_negative_m)
         return wm
 
-    def get_core_data(self):
+    def get_core_data(self,rad=1):
         id_output = self.idata.ou
             
         mbh, mns, _ = id_output.get_msun_masses()
         wm = self.get_core_wm_object()
 
         core_out = self.core_out
-            
+        
+        if rad==1:
+            rad = wm.radii[-1]
+
         # Get waveforms
         for r in wm.radii:
             for (l,m) in wm.modes:
                 psilm = wm.get(var='Psi4',l=l, m=m, r=r)
                 psilm.write_to_txt('Psi4', core_out)
-                hlm = wm.get(l=l, m=m)
+                hlm = wm.get(l=l, m=m,r=rad)
                 hlm.write_to_txt('h', core_out)
 
         # Get energetics
         madm, jadm = id_output.get_ADM_qtys()
         wm.energetics(mbh, mns, madm, jadm, path_out = core_out)
 
-    def get_core_data_negm(self):
+    def get_core_data_negm(self,rad=1):
         id_output = self.idata.ou
             
         mbh, mns, _ = id_output.get_msun_masses()
@@ -233,15 +236,16 @@ class Evolution():
 
         core_out = self.core_out
    
+        if rad==1:
+            rad = wm.radii[-1]
+
         # Get waveforms
         for r in wm.radii:
-            print(wm.modes)
             for (l,m) in wm.modes:
                 if m<0:
-                    print("m=",m)
                     psilm = wm.get(var='Psi4',l=l, m=m, r=r)
                     psilm.write_to_txt('Psi4', core_out)
-                    hlm = wm.get(l=l, m=m)
+                    hlm = wm.get(l=l, m=m, r=rad)
                     hlm.write_to_txt('h', core_out)        
 
     def get_lin_momentum(self):
