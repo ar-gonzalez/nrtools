@@ -39,7 +39,10 @@ def csv_reader(filename):
             data.append(line)
     return data
 
-## 3PN energy and ang. mom
+#######
+## 3PN 
+#######
+# energy and ang. mom
 # from https://journals.aps.org/prd/pdf/10.1103/PhysRevD.65.124009
 # Eq. (3) and (4), for spins add Eq. (13)
 
@@ -63,6 +66,36 @@ def j_3pn(mo,q):
     inside_term = -209323/5040 + np.pi*np.pi*41/24 + lam*88/9
     term3 = ( 135/16 + inside_term*nu + nu*nu*31/24 + nu*nu*nu*7/1296)*mo*mo
     return nu*pow(mo,-1/3)*(term1+term2+term3)
+
+# eccentricity
+# eq. 11 from https://arxiv.org/pdf/1807.06857
+
+def ecc_3pn(mo,q,s1=0,s2=0,lam=0,m1=1,m2=1):
+    nu = q_to_nu(q)
+    eb = eb_3pn(mo,q)/nu
+    el = j_3pn(mo,q)/nu # to get \ell
+    xi = -eb*el*el
+
+    # spins
+    M = m1+m2
+    stilde = (s1+s2)/(M*M)
+    dtilde = (s2/m2 - s1/m1)/M
+    dM = m1-m2
+
+    # tidal
+    kt2 = get_kappa2t(lam,m1,m2)
+    
+    first = -4-2*nu+(-1+3*nu)*xi
+    second = ((20-23*nu)/xi)-22+60*nu+3*nu*nu-(31*nu+4*nu*nu)*xi
+    third_a = (-2016+(5644-123*np.pi*np.pi)*nu-252*nu*nu)/(12*xi*xi)
+    third_b = (4848+(-21128+369*np.pi*np.pi)*nu+2988*nu*nu)/(24*xi)
+    third_c = -20+298*nu-186*nu*nu-4*nu*nu*nu
+    third_d = (-30*nu+(283/4)*nu*nu+5*nu*nu*nu)*xi
+    e2 = 1-2*xi+first*eb+second*eb*eb+(third_a+third_b+third_c+third_d)*eb*eb*eb
+    spins = 4*((5/(np.sqrt(xi)) - 3*np.sqrt(xi))*stilde + (dM/M)*(2/np.sqrt(xi) - np.sqrt(xi))*dtilde)*np.power(-eb,3/2)
+    tidal = -8*(4/np.power(xi,4) - 10/np.power(xi,3) + 5/np.power(xi,2))*kt2*np.power(eb,5)
+    e2 = e2 + spins + tidal
+    return np.sqrt(e2)
 
 ## Misc
 def get_id_gw_frequency_Hz(omega):
