@@ -102,6 +102,11 @@ class Evolution():
             time = '20:00:00'  
             memcpu = '90G'
             modules = None
+        elif cluster == 'MN5':
+            partition = 'gp_resc' 
+            time = '1-00:00:00'  
+            memcpu = '90G'
+            modules = None
         else:
             print('ERROR: Unknown cluster name. Currently available: ARA, DRACO.')
 
@@ -119,15 +124,20 @@ class Evolution():
         bss.write('#SBATCH --nodes 4 \n')
         bss.write('#SBATCH --ntasks-per-node=4 \n')
         bss.write('#SBATCH -t '+time+' \n')
-        bss.write('#SBATCH --mail-user=alejandra.gonzalez@uni-jena.de \n')
         bss.write('#SBATCH --mail-type=begin \n')
         bss.write('#SBATCH --mail-type=end \n')
-        bss.write('#SBATCH --cpus-per-task=6 \n')
         bss.write('#SBATCH  --exclusive \n')
         if cluster == 'LRZ':
             bss.write('#SBATCH --no-requeue \n')
             bss.write('#SBATCH --get-user-env \n')
             bss.write('#SBATCH --account=pn39go \n')
+        if cluster == 'MN5':
+            bss.write('#SBATCH --account=ice70 \n')
+            bss.write('#SBATCH --mail-user=ar.p-gonzalez@uib.es \n')
+            bss.write('#SBATCH --cpus-per-task=28 \n')
+        else:
+            bss.write('#SBATCH --mail-user=alejandra.gonzalez@uni-jena.de \n')
+            bss.write('#SBATCH --cpus-per-task=6 \n')
         bss.write('##SBATCH  --mem-per-cpu='+memcpu+' \n\n')
         bss.write('export OMP_NUM_THREADS=6 \n')
         bss.write('export I_MPI_DEBUG=5 \n')
