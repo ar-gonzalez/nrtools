@@ -199,7 +199,10 @@ class Evolution():
         if ignore_negative_m:
             dfiles = [os.path.split(x)[1] for x in glob.glob('{}/{}'.format(ev_output.out_inv_dir,'Rpsi4mode??_r*.l0'))]
         else:
-            dfiles = [os.path.split(x)[1] for x in glob.glob('{}/{}'.format(ev_output.out_inv_dir,'Rpsi4mode?m?_r*.l0'))]
+            dfiles = [os.path.split(x)[1] for x in glob.glob('{}/{}'.format(ev_output.out_inv_dir,'Rpsi4mode??_r*.l0'))]
+            dfilesm = [os.path.split(x)[1] for x in glob.glob('{}/{}'.format(ev_output.out_inv_dir,'Rpsi4mode?m?_r*.l0'))]
+            for df in dfilesm:
+                dfiles.append(df)
         wm = mwaves(path = ev_output.out_inv_dir, code = 'bam', filenames = dfiles, 
             mass = mtot, f0 = f0,
             ignore_negative_m=ignore_negative_m)
