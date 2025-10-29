@@ -203,16 +203,21 @@ class Ev_Output():
         except:
             print("===> Error: Time integration hasn't started yet")
 
-    def extract_objects_tracks(self):
+    def extract_objects_tracks(self,xyz=False):
         try:
             mp_file = [i for i in os.listdir(self.outpath) if i.startswith('moving_puncture_distance.lxyz')][0]
             self.mp_path = os.path.join(self.outpath,mp_file)
 
-            px_ns, py_ns, px_bh, py_bh, time = np.loadtxt(fname=self.mp_path, comments='"', usecols=(0,1,3,4,8), unpack=True)
+            if xyz==False:
+                px_ns, py_ns, px_bh, py_bh, time = np.loadtxt(fname=self.mp_path, comments='"', usecols=(0,1,3,4,8), unpack=True)
+                return px_ns, py_ns, px_bh, py_bh, time
+            else:
+                px_ns, py_ns, pz_ns, px_bh, py_bh, pz_bh, time = np.loadtxt(fname=self.mp_path, comments='"', usecols=(0,1,2,3,4,5,8), unpack=True)
+                return px_ns, py_ns, pz_ns, px_bh, py_bh, pz_bh, time
         except IndexError:
             px_ns = py_ns = px_bh = py_bh = time = None
             print("===> Error: Time integration hasn't started yet")
-        return px_ns, py_ns, px_bh, py_bh, time
+        
 
 
     def plot_moving_puncture(self):
