@@ -75,4 +75,3 @@ data.dump()
 # clean up
 sim[dbk].run['R01'].clean_txt()
 print(data.path)
-
