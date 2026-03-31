@@ -151,9 +151,9 @@ class Initial_Data():
         nsmass_error = np.abs(nsmass_current-nsmass_expected)
         # Print status
         print("==> Checking Accuracy: \n")
-        print("~ BH_irreducible_mass: expected: ", bhmass_expected, "| current: ", bhmass_current,"| Error= ",bhmass_error,"(",bhmass_error*100/bhmass_expected,"%) \n")
-        print("~ BH_chi_z: expected: ", bhchiz_expected, "| current: ", bhchiz_current,"| Error= ",bhchiz_error,"(",bhchiz_error*100/bhchiz_expected,"%) \n")
-        print("~ NS_baryonic_mass: expected: ", nsmass_expected, "| current: ", nsmass_current,"| Error= ",nsmass_error,"(",nsmass_error*100/nsmass_expected,"%)\n")
+        print(f"~ BH_irreducible_mass: expected: {bhmass_expected:.4f} | current: {bhmass_current:.4f} | Error= {bhmass_error:.4f} ({(bhmass_error*100/bhmass_expected):.4f}%) \n")
+        print(f"~ BH_chi_z: expected: {bhchiz_expected:.4f} | current: {bhchiz_current:.4f} | Error= {bhchiz_error:.4f} ({(bhchiz_error*100/bhchiz_expected):.4f}%) \n")
+        print(f"~ NS_baryonic_mass: expected: {nsmass_expected:.4f} | current: {nsmass_current:.4f} | Error= {nsmass_error:.4f} ({(nsmass_error*100/nsmass_expected):.4f}%)\n")
         return bhmass_error, bhchiz_error, nsmass_error
 
     def check_convergence(self, patch = 'right_BH_around_front'):

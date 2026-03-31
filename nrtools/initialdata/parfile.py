@@ -177,7 +177,18 @@ class Parameter_File():
             PARDIC['NS_EoS_type'] = 'piecewise_polytropic'
             PARDIC['NS_EoS_K0'] = '[8.9493e-02]'
             PARDIC['NS_EoS_Gamma'] = '[1.3569e+00, 4.0700e+00, 2.4110e+00, 1.8900e+00]'
-            PARDIC['NS_EoS_rho0_th'] = '[0.00000000e+00, 3.1534e-04, 8.1147e-04, 1.6191e-03]'           
+            PARDIC['NS_EoS_rho0_th'] = '[0.00000000e+00, 3.1534e-04, 8.1147e-04, 1.6191e-03]'   
+        elif params['eos'] == 'SFHo':
+            PARDIC['NS_EoS_description'] = 'SFHo'
+            PARDIC['NS_EoS_type'] = 'tabular'
+            PARDIC['NS_EoS_table_path'] = './SFHo_cold_beta_1D.txt'
+            PARDIC['NS_EoS_table_format'] = 'line,number_density,total_energy_density,pressure'  
+            PARDIC['NS_EoS_interpolation_method'] = 'Hermite1D'
+            PARDIC['NS_EoS_interpolation_use_log'] = 'yes'
+            PARDIC['NS_EoS_Hermite1D_FD_accuracy'] = 3
+            PARDIC['NS_EoS_Hermite1D_num_points'] = 2
+            PARDIC['NS_EoS_enthalpy_floor'] = 1.0048207674469631
+            PARDIC['NS_EoS_enthalpy_ceiling'] = 3.4760413944646977      
         else:
             print('===> EoS not valid !')
         
