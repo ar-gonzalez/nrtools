@@ -1,8 +1,12 @@
 # Numerical Relativity Tools
 
-*[AG, 17/05/2023]*
+*[AG, 03/06/2026]*
 
 Python package to handle and produce initial data and evolutions with Elliptica and BAM for BHNS mergers (with the intention to generalize to more).
+
+## TODOs
+- extend for tabulated EoS
+- adapt to evolve with ETK and MHDuet
 
 ## Installation
 `python setup.py install`
