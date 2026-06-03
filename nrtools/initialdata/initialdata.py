@@ -90,21 +90,30 @@ class Initial_Data():
             time = '20:00:00'  
             memcpu = '90G'
             modules = ['gcc/11.2.0']
+        elif cluster == 'talaia':
+            cpus = '192'
+            time = '3-0:00:00'
+            modules = ['intel']
         else:
-            print('ERROR: Unknown cluster name. Currently available: ARA, DRACO, or LRZ')
+            print('ERROR: Unknown cluster name. Currently available: ARA, DRACO, LRZ, talaia')
 
         bss = open(os.path.join(self.simpath,bashname), 'a')
         self.bashname = bashname
         bss.write('#!/bin/bash \n')
-        bss.write('#SBATCH --partition '+partition+' \n')
+        if cluster != 'talaia':
+            bss.write('#SBATCH --partition '+partition+' \n')
+            bss.write('#SBATCH --mail-user=alejandra.gonzalez@uni-jena.de \n')
+        else:
+            bss.write('#SBATCH --account=res_uib117_cpu \n')
+            bss.write('#SBATCH --qos=res_class_a \n')
+            bss.write('#SBATCH --mail-user=ar.p-gonzalez@uib.es \n')
         if cluster == 'DRACO':
             bss.write('#SBATCH --qos=multi-node \n')
         bss.write('#SBATCH -J '+self.simname+'\n')
-        bss.write('#SBATCH -o '+os.path.join(self.simpath,'out.log')+' \n')
+        bss.write('#SBATCH -o out.log \n')
         bss.write('#SBATCH -N 1 \n')
         bss.write('#SBATCH -n 1 \n')
         bss.write('#SBATCH -t '+time+' \n')
-        bss.write('#SBATCH --mail-user=alejandra.gonzalez@uni-jena.de \n')
         bss.write('#SBATCH --mail-type=begin \n')
         bss.write('#SBATCH --mail-type=end \n')
         if cluster == 'LRZ':
@@ -118,7 +127,7 @@ class Initial_Data():
         bss.write('export ELLIPTICA='+self.id_exe+' \n')
         bss.write('export OMP_NUM_THREADS='+cpus+' \n\n')
 
-        if cluster!='LRZ':
+        if cluster!='LRZ' or cluster!='talaia':
             bss.write('module purge \n')
         
         for mod in modules:
@@ -126,6 +135,9 @@ class Initial_Data():
                 bss.write('module load '+mod+' \n\n')
             else:
                 bss.write('module load '+mod+' \n')
+
+        if cluster=='talaia':
+            bss.write('module swap gnu13 intel/2024.0.0 \n')
 
         bss.write('time srun $ELLIPTICA $OUTDIR/$PAR.par > $OUTDIR/job.log \n')
         bss.close()
