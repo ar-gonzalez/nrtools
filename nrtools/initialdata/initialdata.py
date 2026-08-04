@@ -6,14 +6,8 @@ from ..evolution.evolution import Evolution
 import matplotlib.pyplot as plt
 
 ########################################
-# Cluster settings for the Elliptica ID sbatch script
+# Cluster settings for the sbatch script
 ########################################
-# talaia (UIB): follows the template
-# /scratch/resh000961/SFHo_BH_m2.4_s0.7--NS_m1.4_s0--d40/run_elliptica.sh
-# (the submission script used in practice):
-#   - modules: intel + swap gnu13 -> intel/2024.0.0
-#   - cpus: 192 per node (2 sockets x 96 cores, from slurm.conf)
-#   - wall time: 3 days (max allowed by QoS res_class_a)
 CLUSTERS = {
     'ARA': {
         'partition': 's_standard',
