@@ -31,10 +31,10 @@ PARDIC = {
     'NS_baryonic_mass'               : '@@', # fill data
     'NS_EoS_description'            : '@@', # 'K', 'SLy'
     'NS_EoS_type'                    : '@@', # 'polytropic', 'piecewise_polytropic'
-    'NS_EoS_unit'                    : 'geo', # 'geo', 'geo'
-    'NS_EoS_K0'                      : '@@', # '[92.12]', '[8.9493e-02]'
-    'NS_EoS_Gamma'                   : '@@', # '[2]', '[1.3569e+00, 3.0050e+00, 2.9880e+00, 2.8510e+00]'
-    'NS_EoS_rho0_th'                 : '@@', # [0, 2.3674e-04, 8.1147e-04, 1.6191e-03] only for PWP EOS
+    'NS_EoS_unit'                    : 'geo', # 'geo', 'compose'
+    #'NS_EoS_K0'                      : '@@', # '[92.12]', '[8.9493e-02]'
+    #'NS_EoS_Gamma'                   : '@@', # '[2]', '[1.3569e+00, 3.0050e+00, 2.9880e+00, 2.8510e+00]'
+    #'NS_EoS_rho0_th'                 : '@@', # [0, 2.3674e-04, 8.1147e-04, 1.6191e-03] only for PWP EOS
     'NS_Omega_x'             	       : '0.', 
     'NS_Omega_y'                     : '0.', 
     'NS_Omega_z'                     : '0.', 
@@ -181,6 +181,7 @@ class Parameter_File():
         elif params['eos'] == 'SFHo':
             PARDIC['NS_EoS_description'] = 'SFHo'
             PARDIC['NS_EoS_type'] = 'tabular'
+            PARDIC['NS_EoS_unit'] = 'compose'
             PARDIC['NS_EoS_table_path'] = './SFHo_cold_beta_1D.txt'
             PARDIC['NS_EoS_table_format'] = 'line,number_density,total_energy_density,pressure'  
             PARDIC['NS_EoS_interpolation_method'] = 'Hermite1D'
