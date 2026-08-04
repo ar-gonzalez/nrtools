@@ -10,7 +10,10 @@ import matplotlib.pyplot as plt
 ########################################
 # talaia (UIB) follows the settings of the SLy BHNS ID run that works:
 #   - modules: icc/latest + mkl/latest (no purge, no compiler swap)
-#   - wall time: the working run took ~12.8 days (18384 min) for all resolutions
+#   - cpus: 192 per node (2 sockets x 96 cores, from slurm.conf)
+#   - wall time: 3 days is the max allowed by QoS res_class_a
+#     (the historical SLy ID took ~13 days -> a full multi-resolution
+#     ID may need several submissions / continuation)
 CLUSTERS = {
     'ARA': {
         'partition': 's_standard',
@@ -48,8 +51,8 @@ CLUSTERS = {
         'account': 'res_uib117_cpu',
         'qos': 'res_class_a',
         'cpus': '192',
-        'time': '14-0:00:00',
-        'memcpu': '4G',
+        'time': '3-00:00:00',
+        'memcpu': '2G',
         'modules': ['icc/latest', 'mkl/latest'],
         'purge': False,
         'mail_user': 'ar.p-gonzalez@uib.es',
