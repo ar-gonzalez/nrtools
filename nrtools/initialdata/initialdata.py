@@ -6,6 +6,59 @@ from ..evolution.evolution import Evolution
 import matplotlib.pyplot as plt
 
 ########################################
+# Cluster settings for the Elliptica ID sbatch script
+########################################
+# talaia (UIB) follows the settings of the SLy BHNS ID run that works:
+#   - modules: icc/latest + mkl/latest (no purge, no compiler swap)
+#   - wall time: the working run took ~12.8 days (18384 min) for all resolutions
+CLUSTERS = {
+    'ARA': {
+        'partition': 's_standard',
+        'cpus': '32',
+        'time': '8-0:00:00',
+        'memcpu': '3G',
+        'modules': ['intel/oneapi/2023.2.0', 'icc/latest', 'mkl/latest'],
+        'purge': True,
+        'mail_user': 'alejandra.gonzalez@uni-jena.de',
+        'extra_sbatch': [],
+    },
+    'DRACO': {
+        'partition': 'long',  # 'standard' # compute, standard
+        'cpus': '48',  # '36'
+        'time': '14-0:00:00',  # inf, 3-0:00:00
+        'memcpu': '2G',
+        'modules': ['use.intel-oneapi', 'icc/latest', 'mkl/latest', 'mpi/openmpi/4.1.1'],
+        'purge': True,
+        'mail_user': 'alejandra.gonzalez@uni-jena.de',
+        'extra_sbatch': ['#SBATCH --qos=multi-node'],
+    },
+    'LRZ': {
+        'partition': 'micro',
+        'cpus': '48',
+        'time': '20:00:00',
+        'memcpu': '90G',
+        'modules': ['gcc/11.2.0'],
+        'purge': False,
+        'mail_user': 'alejandra.gonzalez@uni-jena.de',
+        'extra_sbatch': ['#SBATCH --no-requeue',
+                         '#SBATCH --get-user-env',
+                         '#SBATCH --account=pn39go'],
+    },
+    'talaia': {
+        'account': 'res_uib117_cpu',
+        'qos': 'res_class_a',
+        'cpus': '192',
+        'time': '14-0:00:00',
+        'memcpu': '4G',
+        'modules': ['icc/latest', 'mkl/latest'],
+        'purge': False,
+        'mail_user': 'ar.p-gonzalez@uib.es',
+        'extra_sbatch': [],
+    },
+}
+
+
+########################################
 # Main class for Initial Data
 ########################################
 
@@ -71,73 +124,44 @@ class Initial_Data():
             for key, value in pardic.items():
                 f.write('%s =   %s\n' % (key, value))
 
-    def write_bashfile(self,bashname= 'run_elliptica.sh',cluster='ARA'):
-        if cluster == 'ARA':
-            partition = 's_standard'
-            cpus = '32'
-            time = '8-0:00:00'
-            memcpu = '3G'
-            modules = ['intel/oneapi/2023.2.0','icc/latest','mkl/latest']
-        elif cluster == 'DRACO':
-            partition = 'long' #'standard' # compute, standard
-            cpus = '48' #'36'
-            time = '14-0:00:00' # inf, 3-0:00:00
-            memcpu = '2G'
-            modules = ['use.intel-oneapi','icc/latest','mkl/latest','mpi/openmpi/4.1.1']
-        elif cluster == 'LRZ':
-            partition = 'micro' 
-            cpus = '48'
-            time = '20:00:00'  
-            memcpu = '90G'
-            modules = ['gcc/11.2.0']
-        elif cluster == 'talaia':
-            cpus = '192'
-            time = '3-0:00:00'
-            modules = ['intel']
-        else:
-            print('ERROR: Unknown cluster name. Currently available: ARA, DRACO, LRZ, talaia')
+    def write_bashfile(self, bashname='run_elliptica.sh', cluster='ARA'):
+        try:
+            cfg = CLUSTERS[cluster]
+        except KeyError:
+            raise ValueError(
+                'ERROR: Unknown cluster name: {} . Currently available: {}'.format(
+                    cluster, ', '.join(CLUSTERS)))
 
-        bss = open(os.path.join(self.simpath,bashname), 'a')
         self.bashname = bashname
+        bss = open(os.path.join(self.simpath, bashname), 'a')
         bss.write('#!/bin/bash \n')
-        if cluster != 'talaia':
-            bss.write('#SBATCH --partition '+partition+' \n')
-            bss.write('#SBATCH --mail-user=alejandra.gonzalez@uni-jena.de \n')
+        if 'account' in cfg:
+            bss.write('#SBATCH --account=' + cfg['account'] + ' \n')
+            bss.write('#SBATCH --qos=' + cfg['qos'] + ' \n')
         else:
-            bss.write('#SBATCH --account=res_uib117_cpu \n')
-            bss.write('#SBATCH --qos=res_class_a \n')
-            bss.write('#SBATCH --mail-user=ar.p-gonzalez@uib.es \n')
-        if cluster == 'DRACO':
-            bss.write('#SBATCH --qos=multi-node \n')
-        bss.write('#SBATCH -J '+self.simname+'\n')
+            bss.write('#SBATCH --partition ' + cfg['partition'] + ' \n')
+        bss.write('#SBATCH --mail-user=' + cfg['mail_user'] + ' \n')
+        for extra in cfg['extra_sbatch']:
+            bss.write(extra + ' \n')
+        bss.write('#SBATCH -J ' + self.simname + '\n')
         bss.write('#SBATCH -o out.log \n')
         bss.write('#SBATCH -N 1 \n')
         bss.write('#SBATCH -n 1 \n')
-        bss.write('#SBATCH -t '+time+' \n')
+        bss.write('#SBATCH -t ' + cfg['time'] + ' \n')
         bss.write('#SBATCH --mail-type=begin \n')
         bss.write('#SBATCH --mail-type=end \n')
-        if cluster == 'LRZ':
-            bss.write('#SBATCH --no-requeue \n')
-            bss.write('#SBATCH --get-user-env \n')
-            bss.write('#SBATCH --account=pn39go \n')
-        bss.write('#SBATCH --cpus-per-task='+cpus+' \n')
-        bss.write('##SBATCH  --mem-per-cpu='+memcpu+' \n\n')
-        bss.write('export OUTDIR='+self.simpath+' \n')
-        bss.write('export PAR='+self.simname+' \n')
-        bss.write('export ELLIPTICA='+self.id_exe+' \n')
-        bss.write('export OMP_NUM_THREADS='+cpus+' \n\n')
+        bss.write('#SBATCH --cpus-per-task=' + cfg['cpus'] + ' \n')
+        bss.write('##SBATCH --mem-per-cpu=' + cfg['memcpu'] + ' \n\n')
+        bss.write('export OUTDIR=' + self.simpath + ' \n')
+        bss.write('export PAR=' + self.simname + ' \n')
+        bss.write('export ELLIPTICA=' + self.id_exe + ' \n')
+        bss.write('export OMP_NUM_THREADS=' + cfg['cpus'] + ' \n\n')
 
-        if cluster!='LRZ' or cluster!='talaia':
+        if cfg['purge']:
             bss.write('module purge \n')
-        
-        for mod in modules:
-            if mod == modules[-1]:
-                bss.write('module load '+mod+' \n\n')
-            else:
-                bss.write('module load '+mod+' \n')
-
-        if cluster=='talaia':
-            bss.write('module swap gnu13 intel/2024.0.0 \n')
+        for mod in cfg['modules']:
+            bss.write('module load ' + mod + ' \n')
+        bss.write('\n')
 
         bss.write('time srun $ELLIPTICA $OUTDIR/$PAR.par > $OUTDIR/job.log \n')
         bss.close()
