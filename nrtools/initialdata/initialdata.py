@@ -8,12 +8,12 @@ import matplotlib.pyplot as plt
 ########################################
 # Cluster settings for the Elliptica ID sbatch script
 ########################################
-# talaia (UIB) follows the settings of the SLy BHNS ID run that works:
-#   - modules: icc/latest + mkl/latest (no purge, no compiler swap)
+# talaia (UIB): follows the template
+# /scratch/resh000961/SFHo_BH_m2.4_s0.7--NS_m1.4_s0--d40/run_elliptica.sh
+# (the submission script used in practice):
+#   - modules: intel + swap gnu13 -> intel/2024.0.0
 #   - cpus: 192 per node (2 sockets x 96 cores, from slurm.conf)
-#   - wall time: 3 days is the max allowed by QoS res_class_a
-#     (the historical SLy ID took ~13 days -> a full multi-resolution
-#     ID may need several submissions / continuation)
+#   - wall time: 3 days (max allowed by QoS res_class_a)
 CLUSTERS = {
     'ARA': {
         'partition': 's_standard',
@@ -51,11 +51,13 @@ CLUSTERS = {
         'account': 'res_uib117_cpu',
         'qos': 'res_class_a',
         'cpus': '192',
-        'time': '3-00:00:00',
+        'time': '3-0:00:00',
         'memcpu': '2G',
-        'modules': ['icc/latest', 'mkl/latest'],
+        'modules': ['intel'],
+        'swap': 'gnu13 intel/2024.0.0',
         'purge': False,
         'mail_user': 'ar.p-gonzalez@uib.es',
+        'mail_after_time': True,
         'extra_sbatch': [],
     },
 }
@@ -143,7 +145,8 @@ class Initial_Data():
             bss.write('#SBATCH --qos=' + cfg['qos'] + ' \n')
         else:
             bss.write('#SBATCH --partition ' + cfg['partition'] + ' \n')
-        bss.write('#SBATCH --mail-user=' + cfg['mail_user'] + ' \n')
+        if not cfg.get('mail_after_time', False):
+            bss.write('#SBATCH --mail-user=' + cfg['mail_user'] + ' \n')
         for extra in cfg['extra_sbatch']:
             bss.write(extra + ' \n')
         bss.write('#SBATCH -J ' + self.simname + '\n')
@@ -151,10 +154,12 @@ class Initial_Data():
         bss.write('#SBATCH -N 1 \n')
         bss.write('#SBATCH -n 1 \n')
         bss.write('#SBATCH -t ' + cfg['time'] + ' \n')
+        if cfg.get('mail_after_time', False):
+            bss.write('#SBATCH --mail-user=' + cfg['mail_user'] + ' \n')
         bss.write('#SBATCH --mail-type=begin \n')
         bss.write('#SBATCH --mail-type=end \n')
         bss.write('#SBATCH --cpus-per-task=' + cfg['cpus'] + ' \n')
-        bss.write('##SBATCH --mem-per-cpu=' + cfg['memcpu'] + ' \n\n')
+        bss.write('##SBATCH  --mem-per-cpu=' + cfg['memcpu'] + ' \n\n')
         bss.write('export OUTDIR=' + self.simpath + ' \n')
         bss.write('export PAR=' + self.simname + ' \n')
         bss.write('export ELLIPTICA=' + self.id_exe + ' \n')
@@ -164,6 +169,8 @@ class Initial_Data():
             bss.write('module purge \n')
         for mod in cfg['modules']:
             bss.write('module load ' + mod + ' \n')
+        if 'swap' in cfg:
+            bss.write('module swap ' + cfg['swap'] + ' \n')
         bss.write('\n')
 
         bss.write('time srun $ELLIPTICA $OUTDIR/$PAR.par > $OUTDIR/job.log \n')
